@@ -26,7 +26,7 @@ Citizen.CreateThread(function()
     local previousPos
 
     isDead = IsEntityDead(playerPed)
-    --
+
     if isKO and previousPos ~= currentPos then
       isKO = false
     end
@@ -55,15 +55,17 @@ end)
 -- Triggered when player died by environment
 AddEventHandler('baseevents:onPlayerDied', function(playerId, reasonID, position)
   reason = 'Tentative de suicide'
-  TriggerEvent('es_em:playerInComa', reason)
-  SendNotification("Vous êtes dans le coma !")
+  TriggerEvent('es_em:playerInComa')
+  TriggerServerEvent('es_em:sendEmergency', reason, playerId, position)
+  SendNotification('Vous êtes dans le coma !')
 end)
 
 -- Triggered when player died by an another player
 AddEventHandler('baseevents:onPlayerKilled', function(playerId, playerKill, reasonID, position)
   local reason = GetStringReason(reasonID)
-  TriggerEvent('es_em:playerInComa', reason)
-  SendNotification("Vous êtes dans le coma !")
+  TriggerEvent('es_em:playerInComa')
+  TriggerServerEvent('es_em:sendEmergency', reason, playerId, position)
+  SendNotification('Vous êtes dans le coma !')
 end)
 
 --[[
@@ -74,19 +76,19 @@ end)
 
 function SetPlayerKO(playerID, playerPed)
   isKO = true
-  SendNotification("Vous êtes KO !")
+  SendNotification('Vous êtes KO !')
   SetPedToRagdoll(playerPed, 6000, 6000, 0, 0, 0, 0)
 end
 
 function ResurrectPlayerByEmergency(playerPed)
-  SendNotification("Vous avez été réanimé")
+  SendNotification('Vous avez été réanimé')
   ResurrectPed(playerPed)
   SetEntityHealth(playerPed, GetPedMaxHealth(playerPed)/2)
   ClearPedTasksImmediately(playerPed)
 end
 
 function SendNotification(message)
-  SetNotificationTextEntry("STRING")
+  SetNotificationTextEntry('STRING')
   AddTextComponentString(message)
   DrawNotification(false, false)
 end
@@ -98,7 +100,7 @@ end
 --]]
 
 function GetStringReason(reasonID)
-  local reasonString = "killed"
+  local reasonString = 'killed'
 
   if reasonID == 0 or reasonID == 56 or reasonID == 1 or reasonID == 2 then
     reasonIDString = 'meleed'
