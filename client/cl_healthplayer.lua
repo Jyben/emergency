@@ -49,7 +49,7 @@ end)
 
 -- Triggered when player died by environment
 AddEventHandler('baseevents:onPlayerDied',
-  function(playerId, reasonID, position)
+  function(playerId, reasonID)
     local reason = 'Tentative de suicide'
     TriggerEvent('es_em:playerInComa')
     local pos = GetEntityCoords(GetPlayerPed(-1))
@@ -60,9 +60,10 @@ AddEventHandler('baseevents:onPlayerDied',
 
 -- Triggered when player died by an another player
 AddEventHandler('baseevents:onPlayerKilled',
-  function(playerId, playerKill, reasonID, position)
+  function(playerId, playerKill, reasonID)
     local reason = GetStringReason(reasonID)
     TriggerEvent('es_em:playerInComa')
+    local pos = GetEntityCoords(GetPlayerPed(-1))
     TriggerServerEvent('es_em:sendEmergency', reason, PlayerId(), pos.x, pos.y, pos.z)
     SendNotification('Vous êtes dans le coma !')
   end
