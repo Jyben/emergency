@@ -47,26 +47,26 @@ end)
 ################################
 --]]
 
--- Triggered when doc resurrects player
-AddEventHandler('es_em:resurrectPlayer', function()
-  ResurrectPlayerByEmergency(GetPlayerPed(-1))
-end)
-
 -- Triggered when player died by environment
-AddEventHandler('baseevents:onPlayerDied', function(playerId, reasonID, position)
-  reason = 'Tentative de suicide'
-  TriggerEvent('es_em:playerInComa')
-  TriggerServerEvent('es_em:sendEmergency', reason, playerId, position)
-  SendNotification('Vous êtes dans le coma !')
-end)
+AddEventHandler('baseevents:onPlayerDied',
+  function(playerId, reasonID, position)
+    local reason = 'Tentative de suicide'
+    TriggerEvent('es_em:playerInComa')
+    local pos = GetEntityCoords(GetPlayerPed(-1))
+    TriggerServerEvent('es_em:sendEmergency', reason, PlayerId(), pos.x, pos.y, pos.z)
+    SendNotification('Vous êtes dans le coma !')
+  end
+)
 
 -- Triggered when player died by an another player
-AddEventHandler('baseevents:onPlayerKilled', function(playerId, playerKill, reasonID, position)
-  local reason = GetStringReason(reasonID)
-  TriggerEvent('es_em:playerInComa')
-  TriggerServerEvent('es_em:sendEmergency', reason, playerId, position)
-  SendNotification('Vous êtes dans le coma !')
-end)
+AddEventHandler('baseevents:onPlayerKilled',
+  function(playerId, playerKill, reasonID, position)
+    local reason = GetStringReason(reasonID)
+    TriggerEvent('es_em:playerInComa')
+    TriggerServerEvent('es_em:sendEmergency', reason, PlayerId(), pos.x, pos.y, pos.z)
+    SendNotification('Vous êtes dans le coma !')
+  end
+)
 
 --[[
 ################################

@@ -1,3 +1,12 @@
+--[[
+################################################################
+- Creator: Jyben
+- Date: 01/05/2017
+- Url: https://github.com/Jyben/emergency
+- Licence: Apache 2.0
+################################################################
+--]]
+
 local Keys = {
 	["ESC"] = 322, ["F1"] = 288, ["F2"] = 289, ["F3"] = 170, ["F5"] = 166, ["F6"] = 167, ["F7"] = 168, ["F8"] = 169, ["F9"] = 56, ["F10"] = 57,
 	["~"] = 243, ["1"] = 157, ["2"] = 158, ["3"] = 160, ["4"] = 164, ["5"] = 165, ["6"] = 159, ["7"] = 161, ["8"] = 162, ["9"] = 163, ["-"] = 84, ["="] = 83, ["BACKSPACE"] = 177,
@@ -10,120 +19,200 @@ local Keys = {
 	["NENTER"] = 201, ["N4"] = 108, ["N5"] = 60, ["N6"] = 107, ["N+"] = 96, ["N-"] = 97, ["N7"] = 117, ["N8"] = 61, ["N9"] = 118
 }
 
-Citizen.CreateThread(function()
-  local x = 1155.26
-  local y = -1520.82
-  local z = 34.84
+--[[
+################################
+            THREADS
+################################
+--]]
 
-  while true do
-    Citizen.Wait(1)
+Citizen.CreateThread(
+	function()
+		local x = 1155.26
+		local y = -1520.82
+		local z = 34.84
 
-    local playerPos = GetEntityCoords(GetPlayerPed(-1), true)
-    --Citizen.Trace(Vdist(playerPos.x, playerPos.y, playerPos.z, x, y, z))
-    if (Vdist(playerPos.x, playerPos.y, playerPos.z, x, y, z) < 100.0) then
-      -- Service
-      DrawMarker(1, x, y, z - 1, 0, 0, 0, 0, 0, 0, 3.0001, 3.0001, 1.5001, 255, 165, 0,165, 0, 0, 0,0)
-      -- Service car
-      DrawMarker(1, 1201.45, -1546.57, 39.4022 - 1, 0, 0, 0, 0, 0, 0, 3.0001, 3.0001, 1.5001, 255, 165, 0,165, 0, 0, 0,0)
+		while true do
+			Citizen.Wait(1)
 
-      if (Vdist(playerPos.x, playerPos.y, playerPos.z, x, y, z) < 2.0) then
-        DisplayHelpText("Press ~INPUT_CONTEXT~ to start your job")
+			local playerPos = GetEntityCoords(GetPlayerPed(-1), true)
+			--Citizen.Trace(Vdist(playerPos.x, playerPos.y, playerPos.z, x, y, z))
+			if (Vdist(playerPos.x, playerPos.y, playerPos.z, x, y, z) < 100.0) then
+				-- Service
+				DrawMarker(1, x, y, z - 1, 0, 0, 0, 0, 0, 0, 3.0001, 3.0001, 1.5001, 255, 165, 0,165, 0, 0, 0,0)
+				-- Service car
+				DrawMarker(1, 1201.45, -1546.57, 39.4022 - 1, 0, 0, 0, 0, 0, 0, 3.0001, 3.0001, 1.5001, 255, 165, 0,165, 0, 0, 0,0)
 
-        if (IsControlJustReleased(1, 51)) then
-          SendNotification("Début du service")
-          local model = GetHashKey('s_m_m_paramedic_01')
+				if (Vdist(playerPos.x, playerPos.y, playerPos.z, x, y, z) < 2.0) then
+					DisplayHelpText("Press ~INPUT_CONTEXT~ to start your job")
 
-          RequestModel(model)
-          while not HasModelLoaded(model) do
-            RequestModel(model)
-            Citizen.Wait(0)
-          end
+					if (IsControlJustReleased(1, 51)) then
+						SendNotification("Début du service")
+						local model = GetHashKey('s_m_m_paramedic_01')
 
-          SetPlayerModel(PlayerId(), model)
-          SetModelAsNoLongerNeeded(model)
-        end
-      end
-    end
+						RequestModel(model)
+						while not HasModelLoaded(model) do
+							RequestModel(model)
+							Citizen.Wait(0)
+						end
 
-
-  end
+						SetPlayerModel(PlayerId(), model)
+						SetModelAsNoLongerNeeded(model)
+					end
+				end
+			end
+		end
 end)
 
-Citizen.CreateThread(function()
-  local x = 1140.41
-  local y = -1608.15
-  local z = 34.6939
-  -- 282.858
-  -- -1424.29
-  -- 29.6249
+Citizen.CreateThread(
+	function()
+		local x = 1140.41
+		local y = -1608.15
+		local z = 34.6939
+		-- 282.858
+		-- -1424.29
+		-- 29.6249
 
-  while true do
-    Citizen.Wait(1)
+		while true do
+			Citizen.Wait(1)
 
-    local playerPos = GetEntityCoords(GetPlayerPed(-1), true)
+			local playerPos = GetEntityCoords(GetPlayerPed(-1), true)
 
-    if (Vdist(playerPos.x, playerPos.y, playerPos.z, x, y, z) < 100.0) then
-      -- Service car
-      DrawMarker(1, x, y, z - 1, 0, 0, 0, 0, 0, 0, 3.0001, 3.0001, 1.5001, 255, 165, 0,165, 0, 0, 0,0)
+			if (Vdist(playerPos.x, playerPos.y, playerPos.z, x, y, z) < 100.0) then
+				-- Service car
+				DrawMarker(1, x, y, z - 1, 0, 0, 0, 0, 0, 0, 3.0001, 3.0001, 1.5001, 255, 165, 0,165, 0, 0, 0,0)
 
-      if (Vdist(playerPos.x, playerPos.y, playerPos.z, x, y, z) < 2.0) then
-        DisplayHelpText("Press ~INPUT_CONTEXT~ to get an emergency car")
+				if (Vdist(playerPos.x, playerPos.y, playerPos.z, x, y, z) < 2.0) then
+					DisplayHelpText("Press ~INPUT_CONTEXT~ to get an emergency car")
 
-        if (IsControlJustReleased(1, 51)) then
-          SpawnAmbulance()
-        end
+					if (IsControlJustReleased(1, 51)) then
+						SpawnAmbulance()
+					end
 
-      end
-    end
-  end
+				end
+			end
+		end
 end)
 
-RegisterNetEvent('es_em:emergencyNotification')
-AddEventHandler('es_em:emergencyNotification', function(reason, position)
-  job = 'emergency'
-  Citizen.Trace('test')
-  if job == 'emergency' then
-    SendNotification('<b>EMERGENCY | Reason: </b>' .. reason)
-    SendNotification('Press Y to get the call')
+--[[
+################################
+            EVENTS
+################################
+--]]
 
-    if IsControlPressed(1, Keys["Y"]) then
-      TriggerServerEvent('es_em:getTheCall', PlayerId())
-    end
+RegisterNetEvent('es_em:sendEmergencyToDocs')
+AddEventHandler('es_em:sendEmergencyToDocs',
+	function(reason, playerIDInComa, x, y, z)
+		local job = 'emergency'
+		local callAlreadyTaken = false
+		lplayerID = -1
 
-  end
-end)
+		Citizen.CreateThread(
+			function()
+				if job == 'emergency' and playerIDInComa ~= PlayerId() then
+					SendNotification('<b>URGENCE | Raison: </b>' .. reason)
+					SendNotification('Appuyer sur Y pour prendre l\'appel')
+
+					while not controlPressed do
+						Citizen.Wait(1)
+
+						RegisterNetEvent('es_em:callTaken')
+						AddEventHandler('es_em:callTaken',
+							function(playerName, playerID)
+								callAlreadyTaken = true
+
+								SendNotification('L\'appel a été pris par ' .. playerName)
+								Citizen.Trace(lplayerID)
+								if playerID ~= -1 then
+									if PlayerId() == playerID then
+											StartEmergency(x, y, z, playerID)
+									end
+								end
+							end)
+
+						if callAlreadyTaken then
+							Citizen.Trace('break')
+							break
+						end
+
+						if IsControlPressed(1, Keys["Y"]) and not callAlreadyTaken then
+							callAlreadyTaken = true
+							TriggerServerEvent('es_em:getTheCall', GetPlayerName(PlayerId()), PlayerId())
+						end
+					end
+				end
+		end)
+	end)
+
+--[[
+################################
+        BUSINESS METHODS
+################################
+--]]
 
 function SpawnAmbulance()
-  Citizen.Wait(0)
-  local myPed = GetPlayerPed(-1)
-  local player = PlayerId()
-  local vehicle = GetHashKey('ambulance')
+	Citizen.Wait(0)
+	local myPed = GetPlayerPed(-1)
+	local player = PlayerId()
+	local vehicle = GetHashKey('ambulance')
 
-  RequestModel(vehicle)
+	RequestModel(vehicle)
 
-  while not HasModelLoaded(vehicle) do
-    Wait(1)
-  end
+	while not HasModelLoaded(vehicle) do
+		Wait(1)
+	end
 
-  local plate = math.random(100, 900)
-  local coords = GetOffsetFromEntityInWorldCoords(GetPlayerPed(-1), 0, 5.0, 0)
-  local spawned_car = CreateVehicle(vehicle, coords, 431.436, - 996.786, 25.1887, true, false)
+	local plate = math.random(100, 900)
+	local coords = GetOffsetFromEntityInWorldCoords(GetPlayerPed(-1), 0, 5.0, 0)
+	local spawned_car = CreateVehicle(vehicle, coords, 431.436, - 996.786, 25.1887, true, false)
 
-  SetVehicleOnGroundProperly(spawned_car)
-  SetVehicleNumberPlateText(spawned_car, "MEDIC")
-  SetPedIntoVehicle(myPed, spawned_car, - 1)
-  SetModelAsNoLongerNeeded(vehicle)
-  Citizen.InvokeNative(0xB736A491E64A32CF, Citizen.PointerValueIntInitialized(spawned_car))
+	SetVehicleOnGroundProperly(spawned_car)
+	SetVehicleNumberPlateText(spawned_car, "MEDIC")
+	SetPedIntoVehicle(myPed, spawned_car, - 1)
+	SetModelAsNoLongerNeeded(vehicle)
+	Citizen.InvokeNative(0xB736A491E64A32CF, Citizen.PointerValueIntInitialized(spawned_car))
 end
 
+function StartEmergency(x, y, z, playerID)
+	local playerPos = GetEntityCoords(GetPlayerPed(-1), true)
+	BLIP_EMERGENCY = AddBlipForCoord(x, y, z)
+
+	SetBlipSprite(BLIP_EMERGENCY, 50)
+	SetNewWaypoint(x, y)
+
+	Citizen.CreateThread(
+		function()
+			local isRes = false
+			while not isRes do
+				Citizen.Wait(1)
+				if (Vdist(playerPos.x, playerPos.y, playerPos.z, x, y, z) < 1.0) then
+					isRes = true
+					ResurrectPlayerByEmergency(GetPlayerPed(playerID))
+				end
+			end
+	end)
+end
+
+function ResurrectPlayerByEmergency(playerPed)
+  SendNotification('Vous avez été réanimé')
+  ResurrectPed(playerPed)
+  SetEntityHealth(playerPed, GetPedMaxHealth(playerPed)/2)
+  ClearPedTasksImmediately(playerPed)
+end
+
+--[[
+################################
+        USEFUL METHODS
+################################
+--]]
+
 function DisplayHelpText(str)
-  SetTextComponentFormat("STRING")
-  AddTextComponentString(str)
-  DisplayHelpTextFromStringLabel(0, 0, 1, -1)
+	SetTextComponentFormat("STRING")
+	AddTextComponentString(str)
+	DisplayHelpTextFromStringLabel(0, 0, 1, -1)
 end
 
 function SendNotification(message)
-  SetNotificationTextEntry("STRING")
-  AddTextComponentString(message)
-  DrawNotification(false, false)
+	SetNotificationTextEntry("STRING")
+	AddTextComponentString(message)
+	DrawNotification(false, false)
 end
