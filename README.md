@@ -1,4 +1,4 @@
-emergency
+emergency ![Build Status](https://img.shields.io/badge/status-not%20stable-orange.svg)
 ============
 
 This repository contains a mod for GTAV FiveM. This mod is the emergency job.
