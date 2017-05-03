@@ -47,16 +47,11 @@ Citizen.CreateThread(
 
 					if (IsControlJustReleased(1, 51)) then
 						SendNotification("Début du service")
-						local model = GetHashKey('s_m_m_paramedic_01')
-
-						RequestModel(model)
-						while not HasModelLoaded(model) do
-							RequestModel(model)
-							Citizen.Wait(0)
-						end
-
-						SetPlayerModel(PlayerId(), model)
-						SetModelAsNoLongerNeeded(model)
+						SetPedComponentVariation(GetPlayerPed(-1), 11, 13, 3, 2)
+						SetPedComponentVariation(GetPlayerPed(-1), 8, 15, 0, 2)
+						SetPedComponentVariation(GetPlayerPed(-1), 4, 9, 3, 2)
+						SetPedComponentVariation(GetPlayerPed(-1), 6, 25, 0, 2)
+						SetPedComponentVariation(GetPlayerPed(-1), 3, 92, 0, 2)
 					end
 				end
 			end
