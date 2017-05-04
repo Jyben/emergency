@@ -104,11 +104,10 @@ AddEventHandler('es_em:sendEmergencyToDocs',
 	function(reason, playerIDInComa, x, y, z)
 		local job = 'emergency'
 		local callAlreadyTaken = false
-		lplayerID = -1
 
 		Citizen.CreateThread(
 			function()
-				if job == 'emergency' and playerIDInComa ~= PlayerId() then
+				if job == 'emergency' then
 					SendNotification('<b>URGENCE | Raison: </b>' .. reason)
 					SendNotification('Appuyer sur Y pour prendre l\'appel')
 
@@ -121,11 +120,8 @@ AddEventHandler('es_em:sendEmergencyToDocs',
 								callAlreadyTaken = true
 
 								SendNotification('L\'appel a été pris par ' .. playerName)
-								Citizen.Trace(lplayerID)
-								if playerID ~= -1 then
-									if PlayerId() == playerID then
-											StartEmergency(x, y, z, playerID)
-									end
+								if PlayerId() == playerID then
+										StartEmergency(x, y, z, playerIDInComa)
 								end
 							end)
 
