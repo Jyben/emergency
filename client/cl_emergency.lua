@@ -19,6 +19,8 @@ local Keys = {
 	["NENTER"] = 201, ["N4"] = 108, ["N5"] = 60, ["N6"] = 107, ["N+"] = 96, ["N-"] = 97, ["N7"] = 117, ["N8"] = 61, ["N9"] = 118
 }
 
+local exitThread = false
+
 --[[
 ################################
             THREADS
@@ -101,9 +103,11 @@ end)
 
 RegisterNetEvent('es_em:sendEmergencyToDocs')
 AddEventHandler('es_em:sendEmergencyToDocs',
-	function(reason, playerIDInComa, x, y, z)
+	function(reason, playerIDInComa, x, y, z, sourcePlayerInComa)
 		local job = 'emergency'
 		local callAlreadyTaken = false
+		local controlPressed = false
+		exitThread = false
 
 		Citizen.CreateThread(
 			function()
@@ -112,16 +116,18 @@ AddEventHandler('es_em:sendEmergencyToDocs',
 					SendNotification('Appuyer sur Y pour prendre l\'appel')
 
 					while not controlPressed do
-						Citizen.Wait(1)
+						Citizen.Wait(0)
 
 						RegisterNetEvent('es_em:callTaken')
 						AddEventHandler('es_em:callTaken',
 							function(playerName, playerID)
 								callAlreadyTaken = true
+								controlPressed = true
 
 								SendNotification('L\'appel a été pris par ' .. playerName)
+
 								if PlayerId() == playerID then
-										StartEmergency(x, y, z, playerIDInComa)
+									StartEmergency(x, y, z, playerIDInComa, sourcePlayerInComa)
 								end
 							end)
 
@@ -132,12 +138,24 @@ AddEventHandler('es_em:sendEmergencyToDocs',
 
 						if IsControlPressed(1, Keys["Y"]) and not callAlreadyTaken then
 							callAlreadyTaken = true
+							controlPressed = true
 							TriggerServerEvent('es_em:getTheCall', GetPlayerName(PlayerId()), PlayerId())
 						end
 					end
 				end
 		end)
 	end)
+
+RegisterNetEvent('es_em:cl_resurectPlayer')
+AddEventHandler('es_em:cl_resurectPlayer',
+	function()
+		SendNotification('Vous avez été réanimé')
+		local playerPed = GetPlayerPed(-1)
+		ResurrectPed(playerPed)
+		SetEntityHealth(playerPed, GetPedMaxHealth(playerPed)/2)
+		ClearPedTasksImmediately(playerPed)
+	end
+)
 
 --[[
 ################################
@@ -168,31 +186,28 @@ function SpawnAmbulance()
 	Citizen.InvokeNative(0xB736A491E64A32CF, Citizen.PointerValueIntInitialized(spawned_car))
 end
 
-function StartEmergency(x, y, z, playerID)
+function StartEmergency(x, y, z, playerID, sourcePlayerInComa)
 	local playerPos = GetEntityCoords(GetPlayerPed(-1), true)
 	BLIP_EMERGENCY = AddBlipForCoord(x, y, z)
 
-	SetBlipSprite(BLIP_EMERGENCY, 50)
+	SetBlipSprite(BLIP_EMERGENCY, 2)
 	SetNewWaypoint(x, y)
 
 	Citizen.CreateThread(
 		function()
 			local isRes = false
-			while not isRes do
-				Citizen.Wait(1)
-				if (Vdist(playerPos.x, playerPos.y, playerPos.z, x, y, z) < 1.0) then
+
+			-- La partie qui fait freez:
+			-- J'ai tenté de sortir de la boucle avec une varible à portée classe (exitThread) mais rien n'y fait, on reste dans le while...
+			while not isRes and not exitThread do
+				Citizen.Wait(0)
+				if (Vdist(playerPos.x, playerPos.y, playerPos.z, x, y, z) < 2.0) then
 					isRes = true
-					ResurrectPlayerByEmergency(GetPlayerPed(playerID))
+					exitThread = true
+					TriggerServerEvent('es_em:sv_resurectPlayer', sourcePlayerInComa)
 				end
 			end
 	end)
-end
-
-function ResurrectPlayerByEmergency(playerPed)
-  SendNotification('Vous avez été réanimé')
-  ResurrectPed(playerPed)
-  SetEntityHealth(playerPed, GetPedMaxHealth(playerPed)/2)
-  ClearPedTasksImmediately(playerPed)
 end
 
 --[[
