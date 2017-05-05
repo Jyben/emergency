@@ -81,13 +81,6 @@ function SetPlayerKO(playerID, playerPed)
   SetPedToRagdoll(playerPed, 6000, 6000, 0, 0, 0, 0)
 end
 
-function ResurrectPlayerByEmergency(playerPed)
-  SendNotification('Vous avez été réanimé')
-  ResurrectPed(playerPed)
-  SetEntityHealth(playerPed, GetPedMaxHealth(playerPed)/2)
-  ClearPedTasksImmediately(playerPed)
-end
-
 function SendNotification(message)
   SetNotificationTextEntry('STRING')
   AddTextComponentString(message)
