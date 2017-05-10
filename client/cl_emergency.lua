@@ -19,7 +19,8 @@ local Keys = {
 	["NENTER"] = 201, ["N4"] = 108, ["N5"] = 60, ["N6"] = 107, ["N+"] = 96, ["N-"] = 97, ["N7"] = 117, ["N8"] = 61, ["N9"] = 118
 }
 
-local exitThread = false
+local isInService = false
+local jobId = -1
 
 --[[
 ################################
@@ -37,28 +38,16 @@ Citizen.CreateThread(
 			Citizen.Wait(1)
 
 			local playerPos = GetEntityCoords(GetPlayerPed(-1), true)
-			--Citizen.Trace(Vdist(playerPos.x, playerPos.y, playerPos.z, x, y, z))
+
 			if (Vdist(playerPos.x, playerPos.y, playerPos.z, x, y, z) < 100.0) then
 				-- Service
 				DrawMarker(1, x, y, z - 1, 0, 0, 0, 0, 0, 0, 3.0001, 3.0001, 1.5001, 255, 165, 0,165, 0, 0, 0,0)
-				-- Service car
-				DrawMarker(1, 1201.45, -1546.57, 39.4022 - 1, 0, 0, 0, 0, 0, 0, 3.0001, 3.0001, 1.5001, 255, 165, 0,165, 0, 0, 0,0)
 
 				if (Vdist(playerPos.x, playerPos.y, playerPos.z, x, y, z) < 2.0) then
 					DisplayHelpText("Press ~INPUT_CONTEXT~ to start your job")
 
 					if (IsControlJustReleased(1, 51)) then
-						SendNotification("Début du service")
-						local model = GetHashKey('s_m_m_paramedic_01')
-
-						RequestModel(model)
-						while not HasModelLoaded(model) do
-							RequestModel(model)
-							Citizen.Wait(0)
-						end
-
-						SetPlayerModel(PlayerId(), model)
-						SetModelAsNoLongerNeeded(model)
+						TriggerServerEvent('es_em:sv_getService')
 					end
 				end
 			end
@@ -70,16 +59,13 @@ Citizen.CreateThread(
 		local x = 1140.41
 		local y = -1608.15
 		local z = 34.6939
-		-- 282.858
-		-- -1424.29
-		-- 29.6249
 
 		while true do
 			Citizen.Wait(1)
 
 			local playerPos = GetEntityCoords(GetPlayerPed(-1), true)
 
-			if (Vdist(playerPos.x, playerPos.y, playerPos.z, x, y, z) < 100.0) then
+			if (Vdist(playerPos.x, playerPos.y, playerPos.z, x, y, z) < 100.0) and isInService then
 				-- Service car
 				DrawMarker(1, x, y, z - 1, 0, 0, 0, 0, 0, 0, 3.0001, 3.0001, 1.5001, 255, 165, 0,165, 0, 0, 0,0)
 
@@ -89,7 +75,6 @@ Citizen.CreateThread(
 					if (IsControlJustReleased(1, 51)) then
 						SpawnAmbulance()
 					end
-
 				end
 			end
 		end
@@ -106,36 +91,25 @@ AddEventHandler('es_em:sendEmergencyToDocs',
 	function(reason, playerIDInComa, x, y, z, sourcePlayerInComa)
 		local job = 'emergency'
 		local callAlreadyTaken = false
-		local controlPressed = false
-		exitThread = false
+
+		RegisterNetEvent('es_em:callTaken')
+		AddEventHandler('es_em:callTaken',
+			function(playerName, playerID)
+				callAlreadyTaken = true
+				SendNotification('L\'appel a été pris par ' .. playerName)
+				if PlayerId() == playerID then
+					StartEmergency(x, y, z, playerIDInComa, sourcePlayerInComa)
+				end
+		end)
 
 		Citizen.CreateThread(
 			function()
-				if job == 'emergency' then
+				if isInService then
+					local controlPressed = false
 					SendNotification('<b>URGENCE | Raison: </b>' .. reason)
 					SendNotification('Appuyer sur Y pour prendre l\'appel')
-
-					while not controlPressed do
+					while not controlPressed and not callAlreadyTaken do
 						Citizen.Wait(0)
-
-						RegisterNetEvent('es_em:callTaken')
-						AddEventHandler('es_em:callTaken',
-							function(playerName, playerID)
-								callAlreadyTaken = true
-								controlPressed = true
-
-								SendNotification('L\'appel a été pris par ' .. playerName)
-
-								if PlayerId() == playerID then
-									StartEmergency(x, y, z, playerIDInComa, sourcePlayerInComa)
-								end
-							end)
-
-						if callAlreadyTaken then
-							Citizen.Trace('break')
-							break
-						end
-
 						if IsControlPressed(1, Keys["Y"]) and not callAlreadyTaken then
 							callAlreadyTaken = true
 							controlPressed = true
@@ -154,6 +128,14 @@ AddEventHandler('es_em:cl_resurectPlayer',
 		ResurrectPed(playerPed)
 		SetEntityHealth(playerPed, GetPedMaxHealth(playerPed)/2)
 		ClearPedTasksImmediately(playerPed)
+	end
+)
+
+RegisterNetEvent('es_em:cl_setService')
+AddEventHandler('es_em:cl_setService',
+	function(p_jobId)
+		jobId = p_jobId
+		GetService()
 	end
 )
 
@@ -187,7 +169,6 @@ function SpawnAmbulance()
 end
 
 function StartEmergency(x, y, z, playerID, sourcePlayerInComa)
-	local playerPos = GetEntityCoords(GetPlayerPed(-1), true)
 	BLIP_EMERGENCY = AddBlipForCoord(x, y, z)
 
 	SetBlipSprite(BLIP_EMERGENCY, 2)
@@ -196,18 +177,44 @@ function StartEmergency(x, y, z, playerID, sourcePlayerInComa)
 	Citizen.CreateThread(
 		function()
 			local isRes = false
-
-			-- La partie qui fait freez:
-			-- J'ai tenté de sortir de la boucle avec une varible à portée classe (exitThread) mais rien n'y fait, on reste dans le while...
-			while not isRes and not exitThread do
+			while not isRes do
 				Citizen.Wait(0)
-				if (Vdist(playerPos.x, playerPos.y, playerPos.z, x, y, z) < 2.0) then
+				Citizen.Trace(GetDistanceBetweenCoords(GetEntityCoords(GetPlayerPed(-1)), x,y,z, true))
+				if (GetDistanceBetweenCoords(GetEntityCoords(GetPlayerPed(-1)), x,y,z, true)<3.0) then
 					isRes = true
-					exitThread = true
 					TriggerServerEvent('es_em:sv_resurectPlayer', sourcePlayerInComa)
 				end
 			end
 	end)
+end
+
+function GetService()
+	-- Get job form server
+	local isOk = false
+	local playerPed = GetPlayerPed(-1)
+	Citizen.Trace(jobId)
+	if jobId == 11 then
+		isOk = true
+	end
+
+	if not isOk then
+		SendNotification('Vous n\'êtes pas ambulancier')
+		return
+	end
+
+	if isInService then
+		SendNotification("Vous n\'êtes plus en service")
+	else
+		SendNotification("Début du service")
+	end
+
+	isInService = not isInService
+
+	SetPedComponentVariation(playerPed, 11, 13, 3, 2)
+	SetPedComponentVariation(playerPed, 8, 15, 0, 2)
+	SetPedComponentVariation(playerPed, 4, 9, 3, 2)
+	SetPedComponentVariation(playerPed, 3, 92, 0, 2)
+	SetPedComponentVariation(playerPed, 6, 25, 0, 2)
 end
 
 --[[
