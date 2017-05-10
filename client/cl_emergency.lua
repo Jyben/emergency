@@ -107,13 +107,17 @@ AddEventHandler('es_em:sendEmergencyToDocs',
 				if isInService then
 					local controlPressed = false
 					SendNotification('<b>URGENCE | Raison: </b>' .. reason)
-					SendNotification('Appuyer sur Y pour prendre l\'appel')
+					SendNotification('Appuyer sur Y pour prendre l\'appel ou N pour le refuser')
 					while not controlPressed and not callAlreadyTaken do
 						Citizen.Wait(0)
 						if IsControlPressed(1, Keys["Y"]) and not callAlreadyTaken then
 							callAlreadyTaken = true
 							controlPressed = true
 							TriggerServerEvent('es_em:getTheCall', GetPlayerName(PlayerId()), PlayerId())
+						elseif IsControlPressed(1, Keys["N"]) then
+							callAlreadyTaken = true
+							controlPressed = true
+							SendNotification('Vous avez rejeté l\'appel')
 						end
 					end
 				end
