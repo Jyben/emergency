@@ -174,15 +174,20 @@ function StartEmergency(x, y, z, playerID, sourcePlayerInComa)
 	SetBlipSprite(BLIP_EMERGENCY, 2)
 	SetNewWaypoint(x, y)
 
+	SendNotification('Un point a été placé sur votre GPS là où se trouve la victime en détresse')
+
 	Citizen.CreateThread(
 		function()
 			local isRes = false
 			while not isRes do
 				Citizen.Wait(0)
-				Citizen.Trace(GetDistanceBetweenCoords(GetEntityCoords(GetPlayerPed(-1)), x,y,z, true))
+				--Citizen.Trace(GetDistanceBetweenCoords(GetEntityCoords(GetPlayerPed(-1)), x,y,z, true))
 				if (GetDistanceBetweenCoords(GetEntityCoords(GetPlayerPed(-1)), x,y,z, true)<3.0) then
-					isRes = true
-					TriggerServerEvent('es_em:sv_resurectPlayer', sourcePlayerInComa)
+						SendNotification('Appuyez sur E pour réanimer le joueur')
+						if (IsControlJustReleased(1, Keys['E'])) then
+	            TriggerServerEvent('es_em:sv_resurectPlayer', sourcePlayerInComa)
+	            isRes = true
+	          end
 				end
 			end
 	end)
