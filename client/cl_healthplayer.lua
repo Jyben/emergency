@@ -31,7 +31,6 @@ local isKO = false
 Citizen.CreateThread(function()
   while true do
     Citizen.Wait(1)
-    --ResurrectPlayerByEmergency(GetPlayerPed(-1)) -- DEBUG
     --NetworkResurrectLocalPlayer(357.757, -597.202, 28.6314, true, true, false)
     local playerPed = GetPlayerPed(-1)
     local playerID = PlayerId()
@@ -54,6 +53,37 @@ Citizen.CreateThread(function()
   end
 end)
 
+Citizen.CreateThread(function()
+	while true do
+		Citizen.Wait(0)
+  	if IsEntityDead(PlayerPedId()) then
+			StartScreenEffect("DeathFailOut", 0, 0)
+			ShakeGameplayCam("DEATH_FAIL_IN_EFFECT_SHAKE", 1.0)
+
+			local scaleform = RequestScaleformMovie("MP_BIG_MESSAGE_FREEMODE")
+
+			if HasScaleformMovieLoaded(scaleform) then
+				Citizen.Wait(0)
+
+				PushScaleformMovieFunction(scaleform, "SHOW_SHARD_WASTED_MP_MESSAGE")
+				BeginTextComponent("STRING")
+				AddTextComponentString("~r~Vous êtes dans le coma")
+				EndTextComponent()
+				PopScaleformMovieFunctionVoid()
+
+		  	Citizen.Wait(500)
+
+		    while IsEntityDead(PlayerPedId()) do
+					DrawScaleformMovieFullscreen(scaleform, 255, 255, 255, 255)
+			 		Citizen.Wait(0)
+		    end
+
+		  	StopScreenEffect("DeathFailOut")
+			end
+		end
+	end
+end)
+
 --[[
 ################################
             EVENTS
@@ -66,7 +96,6 @@ AddEventHandler('baseevents:onPlayerDied',
     local reason = 'Tentative de suicide'
     local pos = GetEntityCoords(GetPlayerPed(-1))
 
-    SendNotification('Vous êtes dans le coma !')
     SendNotification('Appuyez sur E pour appeler une ambulance')
     SendNotification('Appuyez sur X pour respawn')
     TriggerEvent('es_em:playerInComa')
@@ -81,7 +110,7 @@ AddEventHandler('baseevents:onPlayerDied',
             TriggerServerEvent('es_em:sendEmergency', reason, PlayerId(), pos.x, pos.y, pos.z)
             res = true
           elseif (IsControlJustReleased(1, Keys['X'])) then
-            NetworkResurrectLocalPlayer(357.757, -597.202, 28.6314, true, true, false)
+            NetworkResurrectLocalPlayer(349.582, -589.835, 43.315, true, true, false)
             res = true
           end
         end
@@ -95,7 +124,6 @@ AddEventHandler('baseevents:onPlayerKilled',
     local reason = GetStringReason(reasonID)
     local pos = GetEntityCoords(GetPlayerPed(-1))
 
-    SendNotification('Vous êtes dans le coma !')
     SendNotification('Appuyez sur E pour appeler une ambulance')
     SendNotification('Appuyez sur X pour respawn')
     TriggerEvent('es_em:playerInComa')
