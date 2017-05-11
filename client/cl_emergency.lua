@@ -36,7 +36,15 @@ Citizen.CreateThread(
 
 		while true do
 			Citizen.Wait(1)
-
+			--[[
+			if (IsControlPressed(1, Keys["E"])) then
+				local t, distance = GetClosestPlayer()
+				if(distance ~= -1 and distance < 1) then
+					Citizen.Trace('test')
+					TriggerClientEvent('police:forcedEnteringVeh', GetPlayerServerId(t))
+				end
+			end
+			--]]
 			local playerPos = GetEntityCoords(GetPlayerPed(-1), true)
 
 			if (Vdist(playerPos.x, playerPos.y, playerPos.z, x, y, z) < 100.0) then
@@ -47,7 +55,7 @@ Citizen.CreateThread(
 					DisplayHelpText("Press ~INPUT_CONTEXT~ to start your job")
 
 					if (IsControlJustReleased(1, 51)) then
-						TriggerServerEvent('es_em:sv_getService')
+						TriggerServerEvent('es_em:sv_getJobId')
 					end
 				end
 			end
@@ -89,7 +97,6 @@ end)
 RegisterNetEvent('es_em:sendEmergencyToDocs')
 AddEventHandler('es_em:sendEmergencyToDocs',
 	function(reason, playerIDInComa, x, y, z, sourcePlayerInComa)
-		local job = 'emergency'
 		local callAlreadyTaken = false
 
 		RegisterNetEvent('es_em:callTaken')
@@ -135,8 +142,8 @@ AddEventHandler('es_em:cl_resurectPlayer',
 	end
 )
 
-RegisterNetEvent('es_em:cl_setService')
-AddEventHandler('es_em:cl_setService',
+RegisterNetEvent('es_em:cl_setJobId')
+AddEventHandler('es_em:cl_setJobId',
 	function(p_jobId)
 		jobId = p_jobId
 		GetService()
@@ -201,24 +208,21 @@ function StartEmergency(x, y, z, playerID, sourcePlayerInComa)
 	end)
 end
 
+-- Get job form server
 function GetService()
-	-- Get job form server
-	local isOk = false
 	local playerPed = GetPlayerPed(-1)
-	Citizen.Trace(jobId)
-	if jobId == 11 then
-		isOk = true
-	end
 
-	if not isOk then
+	if jobId ~= 11 then
 		SendNotification('Vous n\'êtes pas ambulancier')
 		return
 	end
 
 	if isInService then
 		SendNotification("Vous n\'êtes plus en service")
+		TriggerServerEvent('es_em:sv_setService', 0)
 	else
 		SendNotification("Début du service")
+		TriggerServerEvent('es_em:sv_setService', 1)
 	end
 
 	isInService = not isInService
@@ -246,4 +250,38 @@ function SendNotification(message)
 	SetNotificationTextEntry("STRING")
 	AddTextComponentString(message)
 	DrawNotification(false, false)
+end
+
+function GetClosestPlayer()
+	local players = GetPlayers()
+	local closestDistance = -1
+	local closestPlayer = -1
+	local ply = GetPlayerPed(-1)
+	local plyCoords = GetEntityCoords(ply, 0)
+
+	for index,value in ipairs(players) do
+		local target = GetPlayerPed(value)
+		if(target ~= ply) then
+			local targetCoords = GetEntityCoords(GetPlayerPed(value), 0)
+			local distance = GetDistanceBetweenCoords(targetCoords["x"], targetCoords["y"], targetCoords["z"], plyCoords["x"], plyCoords["y"], plyCoords["z"], true)
+			if(closestDistance == -1 or closestDistance > distance) then
+				closestPlayer = value
+				closestDistance = distance
+			end
+		end
+	end
+
+	return closestPlayer, closestDistance
+end
+
+function GetPlayers()
+    local players = {}
+
+    for i = 0, 31 do
+        if NetworkIsPlayerActive(i) then
+            table.insert(players, i)
+        end
+    end
+
+    return players
 end

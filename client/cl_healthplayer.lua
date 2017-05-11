@@ -94,56 +94,16 @@ end)
 AddEventHandler('baseevents:onPlayerDied',
   function(playerId, reasonID)
     local reason = 'Tentative de suicide'
-    local pos = GetEntityCoords(GetPlayerPed(-1))
-
-    SendNotification('Appuyez sur E pour appeler une ambulance')
-    SendNotification('Appuyez sur X pour respawn')
-    TriggerEvent('es_em:playerInComa')
-
-    Citizen.CreateThread(
-    	function()
-        local res = false
-
-        while not res do
-    			Citizen.Wait(1)
-          if (IsControlJustReleased(1, Keys['E'])) then
-            TriggerServerEvent('es_em:sendEmergency', reason, PlayerId(), pos.x, pos.y, pos.z)
-            res = true
-          elseif (IsControlJustReleased(1, Keys['X'])) then
-            NetworkResurrectLocalPlayer(349.582, -589.835, 43.315, true, true, false)
-            res = true
-          end
-        end
-    end)
-  end
+		OnPlayerDied(playerId, reasonID, reason)
+	end
 )
 
 -- Triggered when player died by an another player
 AddEventHandler('baseevents:onPlayerKilled',
   function(playerId, playerKill, reasonID)
     local reason = GetStringReason(reasonID)
-    local pos = GetEntityCoords(GetPlayerPed(-1))
-
-    SendNotification('Appuyez sur E pour appeler une ambulance')
-    SendNotification('Appuyez sur X pour respawn')
-    TriggerEvent('es_em:playerInComa')
-
-    Citizen.CreateThread(
-      function()
-        local res = false
-
-        while not res do
-          Citizen.Wait(1)
-          if (IsControlJustReleased(1, Keys['E'])) then
-            TriggerServerEvent('es_em:sendEmergency', reason, PlayerId(), pos.x, pos.y, pos.z)
-            res = true
-          elseif (IsControlJustReleased(1, Keys['X'])) then
-            NetworkResurrectLocalPlayer(357.757, -597.202, 28.6314, true, true, false)
-            res = true
-          end
-        end
-    end)
-  end
+		OnPlayerDied(playerId, reasonID, reason)
+	end
 )
 
 --[[
@@ -162,6 +122,61 @@ function SendNotification(message)
   SetNotificationTextEntry('STRING')
   AddTextComponentString(message)
   DrawNotification(false, false)
+end
+
+function ResPlayer()
+	NetworkResurrectLocalPlayer(349.582, -589.835, 43.315, true, true, false)
+end
+
+function OnPlayerDied(playerId, reasonID, reason)
+	local pos = GetEntityCoords(GetPlayerPed(-1))
+	local isDocConnected = nil
+
+	TriggerServerEvent('es_em:sv_getDocConnected')
+
+	Citizen.CreateThread(
+		function()
+			while isDocConnected == nil do
+				Citizen.Wait(1)
+
+				RegisterNetEvent('es_em:cl_getDocConnected')
+				AddEventHandler('es_em:cl_getDocConnected',
+					function(cb)
+						isDocConnected = cb
+						if isDocConnected then
+							SendNotification('Appuyez sur E pour appeler une ambulance')
+						end
+					end
+				)
+			end
+		end
+	)
+
+	SendNotification('Appuyez sur X pour respawn')
+	TriggerEvent('es_em:playerInComa')
+
+	Citizen.CreateThread(
+		function()
+			local res = false
+
+			while not res do
+				Citizen.Wait(1)
+				if (IsControlJustReleased(1, Keys['E'])) then
+					if not isDocConnected then
+						ResPlayer()
+					else
+						TriggerServerEvent('es_em:sendEmergency', reason, PlayerId(), pos.x, pos.y, pos.z)
+					end
+
+					res = true
+				elseif (IsControlJustReleased(1, Keys['X'])) then
+					ResPlayer()
+					res = true
+				end
+			end
+
+			isDocConnected = nil
+	end)
 end
 
 --[[
