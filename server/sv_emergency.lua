@@ -11,22 +11,25 @@ require "resources/essentialmode/lib/MySQL"
 
 MySQL:open("127.0.0.1", "gta5_gamemode_essential", "root", "monpasse")
 
-
 RegisterServerEvent('es_em:sendEmergency')
 AddEventHandler('es_em:sendEmergency',
   function(reason, playerIDInComa, x, y, z)
-    for v = 0, 31, 1 do
-      TriggerClientEvent('es_em:sendEmergencyToDocs', v, reason, playerIDInComa, x, y, z, source)
-    end
+    TriggerEvent("es:getPlayers", function(players)
+      for i,v in pairs(players) do
+        TriggerClientEvent('es_em:sendEmergencyToDocs', i, reason, playerIDInComa, x, y, z, source)
+      end
+    end)
   end
 )
 
 RegisterServerEvent('es_em:getTheCall')
 AddEventHandler('es_em:getTheCall',
   function(playerName, playerID)
-    for v = 0, 31, 1 do
-      TriggerClientEvent('es_em:callTaken', v, playerName, playerID)
-    end
+    TriggerEvent("es:getPlayers", function(players)
+      for i,v in pairs(players) do
+        TriggerClientEvent('es_em:callTaken', i, playerName, playerID)
+      end
+    end)
   end
 )
 
@@ -47,7 +50,24 @@ AddEventHandler('es_em:sv_getJobId',
 RegisterServerEvent('es_em:sv_getDocConnected')
 AddEventHandler('es_em:sv_getDocConnected',
   function()
-    TriggerClientEvent('es_em:cl_getDocConnected', source, GetDocConnected())
+    TriggerEvent("es:getPlayers", function(players)
+      local identifier
+      local table = {}
+      local isConnected = false
+
+      for i,v in pairs(players) do
+        identifier = GetPlayerIdentifiers(i)
+        if (identifier ~= nil) then
+          local executed_query = MySQL:executeQuery("SELECT identifier, job_id, job_name FROM users LEFT JOIN jobs ON jobs.job_id = users.job WHERE users.identifier = '@identifier' AND job_id = 11 AND enService = 1", {['@identifier'] = identifier[1]})
+          local result = MySQL:getResults(executed_query, {'job_id'}, "identifier")
+
+          if (result[1] ~= nil) then
+            isConnected = true
+          end
+        end
+      end
+      TriggerClientEvent('es_em:cl_getDocConnected', source, isConnected)
+    end)
   end
 )
 
@@ -56,10 +76,24 @@ AddEventHandler('es_em:sv_setService',
   function(service)
     TriggerEvent('es:getPlayerFromId', source,
       function(user)
-        print(service)
         local executed_query = MySQL:executeQuery("UPDATE users SET enService = @service WHERE users.identifier = '@identifier'", {['@identifier'] = user.identifier, ['@service'] = service})
       end
     )
+  end
+)
+
+RegisterServerEvent('es_em:sv_removeMoney')
+AddEventHandler('es_em:sv_removeMoney',
+  function()
+    user:setMoney(0)
+    user:setDirty_Money(0)
+  end
+)
+
+RegisterServerEvent('es_em:sv_sendMessageToPlayerInComa')
+AddEventHandler('es_em:sv_sendMessageToPlayerInComa',
+  function(sourcePlayerInComa)
+    TriggerClientEvent('es_em:cl_sendMessageToPlayerInComa', sourcePlayerInComa)
   end
 )
 
@@ -78,23 +112,4 @@ function GetJobId(source)
   )
 
   return jobId
-end
-
-function GetDocConnected()
-  local players = GetPlayers()
-  local identifier
-  local table = {}
-
-  for _, i in ipairs(players) do
-    identifier = GetPlayerIdentifiers(i)
-    local executed_query = MySQL:executeQuery("SELECT identifier, job_id, job_name FROM users LEFT JOIN jobs ON jobs.job_id = users.job WHERE users.identifier = '@identifier' AND job_id = 11 AND enService = 1", {['@identifier'] = identifier[1]})
-    local result = MySQL:getResults(executed_query, {'job_id'}, "identifier")
-
-    if (result[1] ~= nil) then
-      return true
-    end
-  end
-
-  return false
-
 end

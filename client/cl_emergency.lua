@@ -21,6 +21,7 @@ local Keys = {
 
 local isInService = false
 local jobId = -1
+local notificationInProgress = false
 
 --[[
 ################################
@@ -36,15 +37,7 @@ Citizen.CreateThread(
 
 		while true do
 			Citizen.Wait(1)
-			--[[
-			if (IsControlPressed(1, Keys["E"])) then
-				local t, distance = GetClosestPlayer()
-				if(distance ~= -1 and distance < 1) then
-					Citizen.Trace('test')
-					TriggerClientEvent('police:forcedEnteringVeh', GetPlayerServerId(t))
-				end
-			end
-			--]]
+
 			local playerPos = GetEntityCoords(GetPlayerPed(-1), true)
 
 			if (Vdist(playerPos.x, playerPos.y, playerPos.z, x, y, z) < 100.0) then
@@ -52,7 +45,11 @@ Citizen.CreateThread(
 				DrawMarker(1, x, y, z - 1, 0, 0, 0, 0, 0, 0, 3.0001, 3.0001, 1.5001, 255, 165, 0,165, 0, 0, 0,0)
 
 				if (Vdist(playerPos.x, playerPos.y, playerPos.z, x, y, z) < 2.0) then
-					DisplayHelpText("Press ~INPUT_CONTEXT~ to start your job")
+					if isInService then
+						DisplayHelpText("Appuyez sur ~g~E~s~ pour terminer votre service")
+					else
+						DisplayHelpText("Appuyez sur ~g~E~s~ pour prendre votre service")
+					end
 
 					if (IsControlJustReleased(1, 51)) then
 						TriggerServerEvent('es_em:sv_getJobId')
@@ -73,12 +70,12 @@ Citizen.CreateThread(
 
 			local playerPos = GetEntityCoords(GetPlayerPed(-1), true)
 
-			if (Vdist(playerPos.x, playerPos.y, playerPos.z, x, y, z) < 100.0) and isInService then
+			if (Vdist(playerPos.x, playerPos.y, playerPos.z, x, y, z) < 100.0) and isInService and jobId == 11 then
 				-- Service car
 				DrawMarker(1, x, y, z - 1, 0, 0, 0, 0, 0, 0, 3.0001, 3.0001, 1.5001, 255, 165, 0,165, 0, 0, 0,0)
 
 				if (Vdist(playerPos.x, playerPos.y, playerPos.z, x, y, z) < 2.0) then
-					DisplayHelpText("Press ~INPUT_CONTEXT~ to get an emergency car")
+					DisplayHelpText("Appuyez sur ~g~E~s~ pour obtenir un véhicule")
 
 					if (IsControlJustReleased(1, 51)) then
 						SpawnAmbulance()
@@ -98,25 +95,48 @@ RegisterNetEvent('es_em:sendEmergencyToDocs')
 AddEventHandler('es_em:sendEmergencyToDocs',
 	function(reason, playerIDInComa, x, y, z, sourcePlayerInComa)
 		local callAlreadyTaken = false
-
 		RegisterNetEvent('es_em:callTaken')
 		AddEventHandler('es_em:callTaken',
 			function(playerName, playerID)
 				callAlreadyTaken = true
-				SendNotification('L\'appel a été pris par ' .. playerName)
+
+				if isInService and jobId == 11 then
+					SendNotification('L\'appel a été pris par ~b~' .. playerName .. '~s~')
+				end
 				if PlayerId() == playerID then
+					TriggerServerEvent('es_em:sv_sendMessageToPlayerInComa', sourcePlayerInComa)
 					StartEmergency(x, y, z, playerIDInComa, sourcePlayerInComa)
 				end
 		end)
 
+		if callAlreadyTaken then
+			Citizen.Trace('test')
+		end
+
 		Citizen.CreateThread(
 			function()
-				if isInService then
+				if isInService and jobId == 11 then
 					local controlPressed = false
-					SendNotification('<b>URGENCE | Raison: </b>' .. reason)
-					SendNotification('Appuyer sur Y pour prendre l\'appel ou N pour le refuser')
+					local notifReceivedAt = GetGameTimer()
+
+					while notificationInProgress do
+						Citizen.Wait(0)
+					end
+
+					if not callAlreadyTaken then
+						SendNotification('<b>~r~URGENCE~s~ <br><br>~b~Raison~s~: </b>' .. reason)
+						SendNotification('<b>Appuyez sur ~g~Y~s~ pour prendre l\'appel ou ~r~N~s~ pour le refuser</b>')
+					end
+
 					while not controlPressed and not callAlreadyTaken do
 						Citizen.Wait(0)
+						notificationInProgress = true
+
+						if (GetTimeDifference(GetGameTimer(), notifReceivedAt) > 10000) then
+							callAlreadyTaken = true
+							SendNotification('<b>~r~URGENCE~s~ <br><br>Attention, l\'appel précèdent a expiré !</b>')
+						end
+
 						if IsControlPressed(1, Keys["Y"]) and not callAlreadyTaken then
 							callAlreadyTaken = true
 							controlPressed = true
@@ -126,19 +146,14 @@ AddEventHandler('es_em:sendEmergencyToDocs',
 							controlPressed = true
 							SendNotification('Vous avez rejeté l\'appel')
 						end
+
+						if callAlreadyTaken or controlPressed then
+							notificationInProgress = false
+						end
 					end
 				end
-		end)
-	end)
-
-RegisterNetEvent('es_em:cl_resurectPlayer')
-AddEventHandler('es_em:cl_resurectPlayer',
-	function()
-		SendNotification('Vous avez été réanimé')
-		local playerPed = GetPlayerPed(-1)
-		ResurrectPed(playerPed)
-		SetEntityHealth(playerPed, GetPedMaxHealth(playerPed)/2)
-		ClearPedTasksImmediately(playerPed)
+			end
+		)
 	end
 )
 
@@ -193,9 +208,9 @@ function StartEmergency(x, y, z, playerID, sourcePlayerInComa)
 			local ped = GetPlayerPed(-1);
 			while not isRes do
 				Citizen.Wait(0)
-				--Citizen.Trace(GetDistanceBetweenCoords(GetEntityCoords(GetPlayerPed(-1)), x,y,z, true))
+
 				if (GetDistanceBetweenCoords(GetEntityCoords(GetPlayerPed(-1)), x,y,z, true)<3.0) then
-						SendNotification('Appuyez sur E pour réanimer le joueur')
+						DisplayHelpText('Appuyez sur ~g~E~s~ pour réanimer le joueur')
 						if (IsControlJustReleased(1, Keys['E'])) then
 							TaskStartScenarioInPlace(ped, 'CODE_HUMAN_MEDIC_TEND_TO_DEAD', 0, true)
 							Citizen.Wait(8000)
@@ -219,6 +234,7 @@ function GetService()
 
 	if isInService then
 		SendNotification("Vous n\'êtes plus en service")
+		TriggerServerEvent("skin_customization:SpawnPlayer")
 		TriggerServerEvent('es_em:sv_setService', 0)
 	else
 		SendNotification("Début du service")
