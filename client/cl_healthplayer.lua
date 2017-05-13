@@ -21,6 +21,7 @@ local Keys = {
 
 local isDead = false
 local isKO = false
+local isRes = false
 
 --[[
 ################################
@@ -116,6 +117,7 @@ AddEventHandler('es_em:cl_sendMessageToPlayerInComa',
 RegisterNetEvent('es_em:cl_resurectPlayer')
 AddEventHandler('es_em:cl_resurectPlayer',
 	function()
+		isRes = true
 		SendNotification('Vous avez été réanimé')
 		local playerPed = GetPlayerPed(-1)
 		ResurrectPed(playerPed)
@@ -143,6 +145,7 @@ function SendNotification(message)
 end
 
 function ResPlayer()
+	isRes = true
 	TriggerServerEvent('es_em:sv_removeMoney')
 	TriggerServerEvent("item:reset")
 	NetworkResurrectLocalPlayer(357.757, -597.202, 28.6314, true, true, false)
@@ -177,25 +180,25 @@ function OnPlayerDied(playerId, reasonID, reason)
 
 	Citizen.CreateThread(
 		function()
-			local res = false
+			local emergencyCalled = false
 
-			while not res do
+			while not isRes do
 				Citizen.Wait(1)
-				if (IsControlJustReleased(1, Keys['E'])) then
+				if (IsControlJustReleased(1, Keys['E'])) and not emergencyCalled then
 					if not isDocConnected then
 						ResPlayer()
 					else
 						TriggerServerEvent('es_em:sendEmergency', reason, PlayerId(), pos.x, pos.y, pos.z)
 					end
 
-					res = true
+					emergencyCalled = true
 				elseif (IsControlJustReleased(1, Keys['X'])) then
 					ResPlayer()
-					res = true
 				end
 			end
 
 			isDocConnected = nil
+			isRes = false
 	end)
 end
 
