@@ -7,6 +7,18 @@
 ################################################################
 --]]
 
+local Keys = {
+	["ESC"] = 322, ["F1"] = 288, ["F2"] = 289, ["F3"] = 170, ["F5"] = 166, ["F6"] = 167, ["F7"] = 168, ["F8"] = 169, ["F9"] = 56, ["F10"] = 57,
+	["~"] = 243, ["1"] = 157, ["2"] = 158, ["3"] = 160, ["4"] = 164, ["5"] = 165, ["6"] = 159, ["7"] = 161, ["8"] = 162, ["9"] = 163, ["-"] = 84, ["="] = 83, ["BACKSPACE"] = 177,
+	["TAB"] = 37, ["Q"] = 44, ["W"] = 32, ["E"] = 38, ["R"] = 45, ["T"] = 245, ["Y"] = 246, ["U"] = 303, ["P"] = 199, ["["] = 39, ["]"] = 40, ["ENTER"] = 18,
+	["CAPS"] = 137, ["A"] = 34, ["S"] = 8, ["D"] = 9, ["F"] = 23, ["G"] = 47, ["H"] = 74, ["K"] = 311, ["L"] = 182,
+	["LEFTSHIFT"] = 21, ["Z"] = 20, ["X"] = 73, ["C"] = 26, ["V"] = 0, ["B"] = 29, ["N"] = 249, ["M"] = 244, [","] = 82, ["."] = 81,
+	["LEFTCTRL"] = 36, ["LEFTALT"] = 19, ["SPACE"] = 22, ["RIGHTCTRL"] = 70,
+	["HOME"] = 213, ["PAGEUP"] = 10, ["PAGEDOWN"] = 11, ["DELETE"] = 178,
+	["LEFT"] = 174, ["RIGHT"] = 175, ["TOP"] = 27, ["DOWN"] = 173,
+	["NENTER"] = 201, ["N4"] = 108, ["N5"] = 60, ["N6"] = 107, ["N+"] = 96, ["N-"] = 97, ["N7"] = 117, ["N8"] = 61, ["N9"] = 118
+}
+
 local isDead = false
 local isKO = false
 
@@ -19,7 +31,7 @@ local isKO = false
 Citizen.CreateThread(function()
   while true do
     Citizen.Wait(1)
-    --ResurrectPlayerByEmergency(GetPlayerPed(-1)) -- DEBUG
+    --NetworkResurrectLocalPlayer(357.757, -597.202, 28.6314, true, true, false)
     local playerPed = GetPlayerPed(-1)
     local playerID = PlayerId()
     local currentPos = GetEntityCoords(playerPed, true)
@@ -41,6 +53,37 @@ Citizen.CreateThread(function()
   end
 end)
 
+Citizen.CreateThread(function()
+	while true do
+		Citizen.Wait(0)
+  	if IsEntityDead(PlayerPedId()) then
+			StartScreenEffect("DeathFailOut", 0, 0)
+			ShakeGameplayCam("DEATH_FAIL_IN_EFFECT_SHAKE", 1.0)
+
+			local scaleform = RequestScaleformMovie("MP_BIG_MESSAGE_FREEMODE")
+
+			if HasScaleformMovieLoaded(scaleform) then
+				Citizen.Wait(0)
+
+				PushScaleformMovieFunction(scaleform, "SHOW_SHARD_WASTED_MP_MESSAGE")
+				BeginTextComponent("STRING")
+				AddTextComponentString("~r~Vous êtes dans le coma")
+				EndTextComponent()
+				PopScaleformMovieFunctionVoid()
+
+		  	Citizen.Wait(500)
+
+		    while IsEntityDead(PlayerPedId()) do
+					DrawScaleformMovieFullscreen(scaleform, 255, 255, 255, 255)
+			 		Citizen.Wait(0)
+		    end
+
+		  	StopScreenEffect("DeathFailOut")
+			end
+		end
+	end
+end)
+
 --[[
 ################################
             EVENTS
@@ -50,23 +93,35 @@ end)
 -- Triggered when player died by environment
 AddEventHandler('baseevents:onPlayerDied',
   function(playerId, reasonID)
-    local reason = 'Tentative de suicide'
-    TriggerEvent('es_em:playerInComa')
-    local pos = GetEntityCoords(GetPlayerPed(-1))
-    TriggerServerEvent('es_em:sendEmergency', reason, PlayerId(), pos.x, pos.y, pos.z)
-    SendNotification('Vous êtes dans le coma !')
-  end
+    local reason = 'Un accident s\'est produit'
+		OnPlayerDied(playerId, reasonID, reason)
+	end
 )
 
 -- Triggered when player died by an another player
 AddEventHandler('baseevents:onPlayerKilled',
   function(playerId, playerKill, reasonID)
-    local reason = GetStringReason(reasonID)
-    TriggerEvent('es_em:playerInComa')
-    local pos = GetEntityCoords(GetPlayerPed(-1))
-    TriggerServerEvent('es_em:sendEmergency', reason, PlayerId(), pos.x, pos.y, pos.z)
-    SendNotification('Vous êtes dans le coma !')
-  end
+    local reason = 'Tentative de meurtre'
+		OnPlayerDied(playerId, reasonID, reason)
+	end
+)
+
+RegisterNetEvent('es_em:cl_sendMessageToPlayerInComa')
+AddEventHandler('es_em:cl_sendMessageToPlayerInComa',
+	function()
+		SendNotification('Une ~b~ambulance~s~ est en route !')
+	end
+)
+
+RegisterNetEvent('es_em:cl_resurectPlayer')
+AddEventHandler('es_em:cl_resurectPlayer',
+	function()
+		SendNotification('Vous avez été réanimé')
+		local playerPed = GetPlayerPed(-1)
+		ResurrectPed(playerPed)
+		SetEntityHealth(playerPed, GetPedMaxHealth(playerPed)/2)
+		ClearPedTasksImmediately(playerPed)
+	end
 )
 
 --[[
@@ -81,17 +136,67 @@ function SetPlayerKO(playerID, playerPed)
   SetPedToRagdoll(playerPed, 6000, 6000, 0, 0, 0, 0)
 end
 
-function ResurrectPlayerByEmergency(playerPed)
-  SendNotification('Vous avez été réanimé')
-  ResurrectPed(playerPed)
-  SetEntityHealth(playerPed, GetPedMaxHealth(playerPed)/2)
-  ClearPedTasksImmediately(playerPed)
-end
-
 function SendNotification(message)
   SetNotificationTextEntry('STRING')
   AddTextComponentString(message)
   DrawNotification(false, false)
+end
+
+function ResPlayer()
+	TriggerServerEvent('es_em:sv_removeMoney')
+	TriggerServerEvent("item:reset")
+	NetworkResurrectLocalPlayer(357.757, -597.202, 28.6314, true, true, false)
+end
+
+function OnPlayerDied(playerId, reasonID, reason)
+	local pos = GetEntityCoords(GetPlayerPed(-1))
+	local isDocConnected = nil
+
+	TriggerServerEvent('es_em:sv_getDocConnected')
+
+	Citizen.CreateThread(
+		function()
+			while isDocConnected == nil do
+				Citizen.Wait(1)
+
+				RegisterNetEvent('es_em:cl_getDocConnected')
+				AddEventHandler('es_em:cl_getDocConnected',
+					function(cb)
+						isDocConnected = cb
+						if isDocConnected then
+							SendNotification('Appuyez sur ~g~E~s~ pour appeler une ambulance')
+						end
+					end
+				)
+			end
+		end
+	)
+
+	SendNotification('Appuyez sur ~r~X~s~ pour respawn')
+	TriggerEvent('es_em:playerInComa')
+
+	Citizen.CreateThread(
+		function()
+			local res = false
+
+			while not res do
+				Citizen.Wait(1)
+				if (IsControlJustReleased(1, Keys['E'])) then
+					if not isDocConnected then
+						ResPlayer()
+					else
+						TriggerServerEvent('es_em:sendEmergency', reason, PlayerId(), pos.x, pos.y, pos.z)
+					end
+
+					res = true
+				elseif (IsControlJustReleased(1, Keys['X'])) then
+					ResPlayer()
+					res = true
+				end
+			end
+
+			isDocConnected = nil
+	end)
 end
 
 --[[
@@ -99,31 +204,3 @@ end
         USEFUL METHODS
 ################################
 --]]
-
-function GetStringReason(reasonID)
-  local reasonString = 'killed'
-
-  if reasonID == 0 or reasonID == 56 or reasonID == 1 or reasonID == 2 then
-    reasonIDString = 'meleed'
-  elseif reasonID == 3 then
-    reasonIDString = 'knifed'
-  elseif reasonID == 4 or reasonID == 6 or reasonID == 18 or reasonID == 51 then
-    reasonIDString = 'bombed'
-  elseif reasonID == 5 or reasonID == 19 then
-    reasonIDString = 'burned'
-  elseif reasonID == 7 or reasonID == 9 then
-    reasonIDString = 'pistoled'
-  elseif reasonID == 10 or reasonID == 11 then
-    reasonIDString = 'shotgunned'
-  elseif reasonID == 12 or reasonID == 13 or reasonID == 52 then
-    reasonIDString = 'SMGd'
-  elseif reasonID == 14 or reasonID == 15 or reasonID == 20 then
-    reasonIDString = 'assaulted'
-  elseif reasonID == 16 or reasonID == 17 then
-    reasonIDString = 'sniped'
-  elseif reasonID == 49 or reasonID == 50 then
-    reasonString = 'ran over'
-  end
-
-  return reasonString
-end
