@@ -93,7 +93,7 @@ end)
 -- Triggered when player died by environment
 AddEventHandler('baseevents:onPlayerDied',
   function(playerId, reasonID)
-    local reason = 'Tentative de suicide'
+    local reason = 'Un accident s\'est produit'
 		OnPlayerDied(playerId, reasonID, reason)
 	end
 )
@@ -101,8 +101,26 @@ AddEventHandler('baseevents:onPlayerDied',
 -- Triggered when player died by an another player
 AddEventHandler('baseevents:onPlayerKilled',
   function(playerId, playerKill, reasonID)
-    local reason = GetStringReason(reasonID)
+    local reason = 'Tentative de meurtre'
 		OnPlayerDied(playerId, reasonID, reason)
+	end
+)
+
+RegisterNetEvent('es_em:cl_sendMessageToPlayerInComa')
+AddEventHandler('es_em:cl_sendMessageToPlayerInComa',
+	function()
+		SendNotification('Une ~b~ambulance~s~ est en route !')
+	end
+)
+
+RegisterNetEvent('es_em:cl_resurectPlayer')
+AddEventHandler('es_em:cl_resurectPlayer',
+	function()
+		SendNotification('Vous avez été réanimé')
+		local playerPed = GetPlayerPed(-1)
+		ResurrectPed(playerPed)
+		SetEntityHealth(playerPed, GetPedMaxHealth(playerPed)/2)
+		ClearPedTasksImmediately(playerPed)
 	end
 )
 
@@ -125,7 +143,9 @@ function SendNotification(message)
 end
 
 function ResPlayer()
-	NetworkResurrectLocalPlayer(349.582, -589.835, 43.315, true, true, false)
+	TriggerServerEvent('es_em:sv_removeMoney')
+	TriggerServerEvent("item:reset")
+	NetworkResurrectLocalPlayer(357.757, -597.202, 28.6314, true, true, false)
 end
 
 function OnPlayerDied(playerId, reasonID, reason)
@@ -144,7 +164,7 @@ function OnPlayerDied(playerId, reasonID, reason)
 					function(cb)
 						isDocConnected = cb
 						if isDocConnected then
-							SendNotification('Appuyez sur E pour appeler une ambulance')
+							SendNotification('Appuyez sur ~g~E~s~ pour appeler une ambulance')
 						end
 					end
 				)
@@ -152,7 +172,7 @@ function OnPlayerDied(playerId, reasonID, reason)
 		end
 	)
 
-	SendNotification('Appuyez sur X pour respawn')
+	SendNotification('Appuyez sur ~r~X~s~ pour respawn')
 	TriggerEvent('es_em:playerInComa')
 
 	Citizen.CreateThread(
@@ -184,31 +204,3 @@ end
         USEFUL METHODS
 ################################
 --]]
-
-function GetStringReason(reasonID)
-  local reasonString = 'killed'
-
-  if reasonID == 0 or reasonID == 56 or reasonID == 1 or reasonID == 2 then
-    reasonIDString = 'meleed'
-  elseif reasonID == 3 then
-    reasonIDString = 'knifed'
-  elseif reasonID == 4 or reasonID == 6 or reasonID == 18 or reasonID == 51 then
-    reasonIDString = 'bombed'
-  elseif reasonID == 5 or reasonID == 19 then
-    reasonIDString = 'burned'
-  elseif reasonID == 7 or reasonID == 9 then
-    reasonIDString = 'pistoled'
-  elseif reasonID == 10 or reasonID == 11 then
-    reasonIDString = 'shotgunned'
-  elseif reasonID == 12 or reasonID == 13 or reasonID == 52 then
-    reasonIDString = 'SMGd'
-  elseif reasonID == 14 or reasonID == 15 or reasonID == 20 then
-    reasonIDString = 'assaulted'
-  elseif reasonID == 16 or reasonID == 17 then
-    reasonIDString = 'sniped'
-  elseif reasonID == 49 or reasonID == 50 then
-    reasonString = 'ran over'
-  end
-
-  return reasonString
-end
