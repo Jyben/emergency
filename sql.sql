@@ -25,6 +25,8 @@ CREATE TABLE IF NOT EXISTS `users` (
   `enService` boolean NOT NULL DEFAULT FALSE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+ALTER TABLE users ADD `JOB` int(11) DEFAULT '1';
+
 INSERT INTO `jobs` (`job_id`, `job_name`, `salary`) VALUES (11, 'Ambulancier', 1200);
 
 UPDATE users SET job = 11 WHERE identifier = 'steam:';
