@@ -125,7 +125,7 @@ AddEventHandler('es_em:sendEmergencyToDocs',
 
 					if not callAlreadyTaken then
 						SendNotification('<b>~r~URGENCE~s~ <br><br>~b~Raison~s~: </b>' .. reason)
-						SendNotification('<b>Appuyez sur ~g~Y~s~ pour prendre l\'appel ou ~r~N~s~ pour le refuser</b>')
+						SendNotification('<b>Appuyez sur ~g~Y~s~ pour prendre l\'appel</b>')
 					end
 
 					while not controlPressed and not callAlreadyTaken do
@@ -141,10 +141,6 @@ AddEventHandler('es_em:sendEmergencyToDocs',
 							callAlreadyTaken = true
 							controlPressed = true
 							TriggerServerEvent('es_em:getTheCall', GetPlayerName(PlayerId()), PlayerId())
-						elseif IsControlPressed(1, Keys["N"]) then
-							callAlreadyTaken = true
-							controlPressed = true
-							SendNotification('Vous avez rejeté l\'appel')
 						end
 
 						if callAlreadyTaken or controlPressed then
