@@ -119,11 +119,13 @@ AddEventHandler('es_em:sendEmergencyToDocs',
 			function()
 				if isInService and jobId == 11 and not playerInComaIsADoc then
 					local controlPressed = false
-					local notifReceivedAt = GetGameTimer()
+
 
 					while notificationInProgress do
 						Citizen.Wait(0)
 					end
+
+					local notifReceivedAt = GetGameTimer()
 
 					if not callAlreadyTaken then
 						SendNotification('<b>~r~URGENCE~s~ <br><br>~b~Raison~s~: </b>' .. reason)
@@ -134,7 +136,7 @@ AddEventHandler('es_em:sendEmergencyToDocs',
 						Citizen.Wait(0)
 						notificationInProgress = true
 
-						if (GetTimeDifference(GetGameTimer(), notifReceivedAt) > 10000) then
+						if (GetTimeDifference(GetGameTimer(), notifReceivedAt) > 15000) then
 							callAlreadyTaken = true
 							SendNotification('<b>~r~URGENCE~s~ <br><br>Attention, l\'appel précèdent a expiré !</b>')
 						end
