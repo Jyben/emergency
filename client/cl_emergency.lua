@@ -19,6 +19,40 @@ local Keys = {
 	["NENTER"] = 201, ["N4"] = 108, ["N5"] = 60, ["N6"] = 107, ["N+"] = 96, ["N-"] = 97, ["N7"] = 117, ["N8"] = 61, ["N9"] = 118
 }
 
+local lang = 'en'
+
+local txt = {
+  ['fr'] = {
+		['getService'] = 'Appuyez sur ~g~E~s~ pour prendre votre service',
+		['dropService'] = 'Appuyez sur ~g~E~s~ pour terminer votre service',
+		['getAmbulance'] = 'Appuyez sur ~g~E~s~ pour obtenir un véhicule',
+		['callTaken'] = 'L\'appel a été pris par ~b~',
+		['emergency'] = '<b>~r~URGENCE~s~ <br><br>~b~Raison~s~: </b>',
+		['takeCall'] = '<b>Appuyez sur ~g~Y~s~ pour prendre l\'appel</b>',
+		['callExpires'] = '<b>~r~URGENCE~s~ <br><br>Attention, l\'appel précèdent a expiré !</b>',
+		['gps'] = 'Un point a été placé sur votre GPS là où se trouve la victime en détresse',
+		['res'] = 'Appuyez sur ~g~E~s~ pour réanimer le joueur',
+		['notDoc'] = 'Vous n\'êtes pas ambulancier',
+		['stopService'] = 'Vous n\'êtes plus en service',
+		['startService'] = 'Début du service'
+  },
+
+	['en'] = {
+		['getService'] = 'Press ~g~E~s~ to take your service',
+		['dropService'] = 'Press ~g~E~s~ to stop your service',
+		['getAmbulance'] = 'Press ~g~E~s~ to get your car',
+		['callTaken'] = 'The call is taken by ~b~',
+		['emergency'] = '<b>~r~EMERGENCY~s~ <br><br>~b~Reason~s~: </b>',
+		['takeCall'] = '<b>Press ~g~Y~s~ to take the call</b>',
+		['callExpires'] = '<b>~r~EMERGENCY~s~ <br><br>Warning, the previous call has expired</b>',
+		['gps'] = 'A point has been placed on your GPS where the victim is in distress',
+		['res'] = 'Press ~g~E~s~ to resuscitate the player',
+		['notDoc'] = 'Your are not a doctor',
+		['stopService'] = 'You are no longer in service',
+		['startService'] = 'Start of service'
+	}
+}
+
 local isInService = false
 local jobId = -1
 local notificationInProgress = false
@@ -46,9 +80,9 @@ Citizen.CreateThread(
 
 				if (Vdist(playerPos.x, playerPos.y, playerPos.z, x, y, z) < 2.0) then
 					if isInService then
-						DisplayHelpText("Appuyez sur ~g~E~s~ pour terminer votre service")
+						DisplayHelpText(txt[lang]['dropService'])
 					else
-						DisplayHelpText("Appuyez sur ~g~E~s~ pour prendre votre service")
+						DisplayHelpText(txt[lang]['getService'])
 					end
 
 					if (IsControlJustReleased(1, 51)) then
@@ -75,7 +109,7 @@ Citizen.CreateThread(
 				DrawMarker(1, x, y, z - 1, 0, 0, 0, 0, 0, 0, 3.0001, 3.0001, 1.5001, 255, 165, 0,165, 0, 0, 0,0)
 
 				if (Vdist(playerPos.x, playerPos.y, playerPos.z, x, y, z) < 2.0) then
-					DisplayHelpText("Appuyez sur ~g~E~s~ pour obtenir un véhicule")
+					DisplayHelpText(txt[lang]['getAmbulance'])
 
 					if (IsControlJustReleased(1, 51)) then
 						SpawnAmbulance()
@@ -106,7 +140,7 @@ AddEventHandler('es_em:sendEmergencyToDocs',
 				callAlreadyTaken = true
 
 				if isInService and jobId == 11 and not playerInComaIsADoc then
-					SendNotification('L\'appel a été pris par ~b~' .. playerName .. '~s~')
+					SendNotification(txt[lang]['callTaken'] .. playerName .. '~s~')
 				end
 
 				if playerServerId == playerID then
@@ -128,8 +162,8 @@ AddEventHandler('es_em:sendEmergencyToDocs',
 					local notifReceivedAt = GetGameTimer()
 
 					if not callAlreadyTaken then
-						SendNotification('<b>~r~URGENCE~s~ <br><br>~b~Raison~s~: </b>' .. reason)
-						SendNotification('<b>Appuyez sur ~g~Y~s~ pour prendre l\'appel</b>')
+						SendNotification(txt[lang]['emergency'] .. reason)
+						SendNotification(txt[lang]['takeCall'])
 					end
 
 					while not controlPressed and not callAlreadyTaken do
@@ -138,7 +172,7 @@ AddEventHandler('es_em:sendEmergencyToDocs',
 
 						if (GetTimeDifference(GetGameTimer(), notifReceivedAt) > 15000) then
 							callAlreadyTaken = true
-							SendNotification('<b>~r~URGENCE~s~ <br><br>Attention, l\'appel précèdent a expiré !</b>')
+							SendNotification(txt[lang]['callExpires'])
 						end
 
 						if IsControlPressed(1, Keys["Y"]) and not callAlreadyTaken then
@@ -200,7 +234,7 @@ function StartEmergency(x, y, z, playerID, sourcePlayerInComa)
 	SetBlipSprite(BLIP_EMERGENCY, 2)
 	SetNewWaypoint(x, y)
 
-	SendNotification('Un point a été placé sur votre GPS là où se trouve la victime en détresse')
+	SendNotification(txt[lang]['gps'])
 
 	Citizen.CreateThread(
 		function()
@@ -210,7 +244,7 @@ function StartEmergency(x, y, z, playerID, sourcePlayerInComa)
 				Citizen.Wait(0)
 
 				if (GetDistanceBetweenCoords(GetEntityCoords(GetPlayerPed(-1)), x,y,z, true)<3.0) then
-						DisplayHelpText('Appuyez sur ~g~E~s~ pour réanimer le joueur')
+						DisplayHelpText(txt[lang]['res'])
 						if (IsControlJustReleased(1, Keys['E'])) then
 							TaskStartScenarioInPlace(ped, 'CODE_HUMAN_MEDIC_TEND_TO_DEAD', 0, true)
 							Citizen.Wait(8000)
@@ -228,16 +262,16 @@ function GetService()
 	local playerPed = GetPlayerPed(-1)
 
 	if jobId ~= 11 then
-		SendNotification('Vous n\'êtes pas ambulancier')
+		SendNotification(txt[lang]['notDoc'])
 		return
 	end
 
 	if isInService then
-		SendNotification("Vous n\'êtes plus en service")
+		SendNotification(txt[lang]['stopService'])
 		TriggerServerEvent("skin_customization:SpawnPlayer")
 		TriggerServerEvent('es_em:sv_setService', 0)
 	else
-		SendNotification("Début du service")
+		SendNotification(txt[lang]['startService'])
 		TriggerServerEvent('es_em:sv_setService', 1)
 	end
 

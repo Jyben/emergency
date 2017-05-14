@@ -19,6 +19,32 @@ local Keys = {
 	["NENTER"] = 201, ["N4"] = 108, ["N5"] = 60, ["N6"] = 107, ["N+"] = 96, ["N-"] = 97, ["N7"] = 117, ["N8"] = 61, ["N9"] = 118
 }
 
+local lang = 'en'
+
+local txt = {
+  ['fr'] = {
+		['inComa'] = '~r~Vous êtes dans le coma',
+		['accident'] = 'Un accident s\'est produit',
+		['murder'] = 'Tentative de meurtre',
+		['ambIsComming'] = 'Une ~b~ambulance~s~ est en route !',
+		['res'] = 'Vous avez été réanimé',
+		['ko'] = 'Vous êtes KO !',
+		['callAmb'] = 'Appuyez sur ~g~E~s~ pour appeler une ambulance',
+		['respawn'] = 'Appuyez sur ~r~X~s~ pour respawn'
+  },
+
+	['en'] = {
+		['inComa'] = '~r~You are in coma',
+		['accident'] = 'An accident happened',
+		['murder'] = 'An attempted murder.',
+		['ambIsComming'] = 'An ambulance arrives !',
+		['res'] = 'You have been resuscitated',
+		['ko'] = 'You are KO !',
+		['callAmb'] = 'Press ~g~E~s~ to call an ambulance.',
+		['respawn'] = 'Press ~r~X~s~ to respawn'
+	}
+}
+
 local isDead = false
 local isKO = false
 local isRes = false
@@ -68,7 +94,7 @@ Citizen.CreateThread(function()
 
 				PushScaleformMovieFunction(scaleform, "SHOW_SHARD_WASTED_MP_MESSAGE")
 				BeginTextComponent("STRING")
-				AddTextComponentString("~r~Vous êtes dans le coma")
+				AddTextComponentString(txt[lang]['inComa'])
 				EndTextComponent()
 				PopScaleformMovieFunctionVoid()
 
@@ -94,7 +120,7 @@ end)
 -- Triggered when player died by environment
 AddEventHandler('baseevents:onPlayerDied',
   function(playerId, reasonID)
-    local reason = 'Un accident s\'est produit'
+    local reason = txt[lang]['accident']
 		OnPlayerDied(playerId, reasonID, reason)
 	end
 )
@@ -102,7 +128,7 @@ AddEventHandler('baseevents:onPlayerDied',
 -- Triggered when player died by an another player
 AddEventHandler('baseevents:onPlayerKilled',
   function(playerId, playerKill, reasonID)
-    local reason = 'Tentative de meurtre'
+    local reason = txt[lang]['murder']
 		OnPlayerDied(playerId, reasonID, reason)
 	end
 )
@@ -110,7 +136,7 @@ AddEventHandler('baseevents:onPlayerKilled',
 RegisterNetEvent('es_em:cl_sendMessageToPlayerInComa')
 AddEventHandler('es_em:cl_sendMessageToPlayerInComa',
 	function()
-		SendNotification('Une ~b~ambulance~s~ est en route !')
+		SendNotification(txt[lang]['ambIsComming'])
 	end
 )
 
@@ -118,7 +144,7 @@ RegisterNetEvent('es_em:cl_resurectPlayer')
 AddEventHandler('es_em:cl_resurectPlayer',
 	function()
 		isRes = true
-		SendNotification('Vous avez été réanimé')
+		SendNotification(txt[lang]['res'])
 		local playerPed = GetPlayerPed(-1)
 		ResurrectPed(playerPed)
 		SetEntityHealth(playerPed, GetPedMaxHealth(playerPed)/2)
@@ -134,7 +160,7 @@ AddEventHandler('es_em:cl_resurectPlayer',
 
 function SetPlayerKO(playerID, playerPed)
   isKO = true
-  SendNotification('Vous êtes KO !')
+  SendNotification(txt[lang]['ko'])
   SetPedToRagdoll(playerPed, 6000, 6000, 0, 0, 0, 0)
 end
 
@@ -167,7 +193,7 @@ function OnPlayerDied(playerId, reasonID, reason)
 					function(cb)
 						isDocConnected = cb
 						if isDocConnected then
-							SendNotification('Appuyez sur ~g~E~s~ pour appeler une ambulance')
+							SendNotification(txt[lang]['callAmb'])
 						end
 					end
 				)
@@ -175,7 +201,7 @@ function OnPlayerDied(playerId, reasonID, reason)
 		end
 	)
 
-	SendNotification('Appuyez sur ~r~X~s~ pour respawn')
+	SendNotification(txt[lang]['respawn'])
 	TriggerEvent('es_em:playerInComa')
 
 	Citizen.CreateThread(
