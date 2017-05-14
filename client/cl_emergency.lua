@@ -95,27 +95,29 @@ RegisterNetEvent('es_em:sendEmergencyToDocs')
 AddEventHandler('es_em:sendEmergencyToDocs',
 	function(reason, playerIDInComa, x, y, z, sourcePlayerInComa)
 		local callAlreadyTaken = false
+		local playerServerId = GetPlayerServerId(PlayerId())
+		local playerInComaIsADoc = false
+
+		if playerIDInComa == playerServerId then playerInComaIsADoc = true else playerInComaIsADoc = false end
+
 		RegisterNetEvent('es_em:callTaken')
 		AddEventHandler('es_em:callTaken',
 			function(playerName, playerID)
 				callAlreadyTaken = true
 
-				if isInService and jobId == 11 then
+				if isInService and jobId == 11 and not playerInComaIsADoc then
 					SendNotification('L\'appel a été pris par ~b~' .. playerName .. '~s~')
 				end
-				if PlayerId() == playerID then
+
+				if playerServerId == playerID then
 					TriggerServerEvent('es_em:sv_sendMessageToPlayerInComa', sourcePlayerInComa)
 					StartEmergency(x, y, z, playerIDInComa, sourcePlayerInComa)
 				end
 		end)
 
-		if callAlreadyTaken then
-			Citizen.Trace('test')
-		end
-
 		Citizen.CreateThread(
 			function()
-				if isInService and jobId == 11 then
+				if isInService and jobId == 11 and not playerInComaIsADoc then
 					local controlPressed = false
 					local notifReceivedAt = GetGameTimer()
 
@@ -140,7 +142,7 @@ AddEventHandler('es_em:sendEmergencyToDocs',
 						if IsControlPressed(1, Keys["Y"]) and not callAlreadyTaken then
 							callAlreadyTaken = true
 							controlPressed = true
-							TriggerServerEvent('es_em:getTheCall', GetPlayerName(PlayerId()), PlayerId())
+							TriggerServerEvent('es_em:getTheCall', GetPlayerName(PlayerId()), playerServerId)
 						end
 
 						if callAlreadyTaken or controlPressed then

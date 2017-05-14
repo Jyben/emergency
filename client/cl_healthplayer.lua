@@ -188,7 +188,7 @@ function OnPlayerDied(playerId, reasonID, reason)
 					if not isDocConnected then
 						ResPlayer()
 					else
-						TriggerServerEvent('es_em:sendEmergency', reason, PlayerId(), pos.x, pos.y, pos.z)
+						TriggerServerEvent('es_em:sendEmergency', reason, GetPlayerServerId(PlayerId()), pos.x, pos.y, pos.z)
 					end
 
 					emergencyCalled = true

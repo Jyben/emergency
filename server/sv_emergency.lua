@@ -85,8 +85,15 @@ AddEventHandler('es_em:sv_setService',
 RegisterServerEvent('es_em:sv_removeMoney')
 AddEventHandler('es_em:sv_removeMoney',
   function()
-    user:setMoney(0)
-    user:setDirty_Money(0)
+    TriggerEvent("es:getPlayerFromId", source,
+      function(user)
+        if(user)then
+          user:setMoney(0)
+          -- This part requires the mod vdk_inventory
+          --TriggerServerEvent("item:reset")
+        end
+      end
+    )
   end
 )
 
@@ -96,6 +103,14 @@ AddEventHandler('es_em:sv_sendMessageToPlayerInComa',
     TriggerClientEvent('es_em:cl_sendMessageToPlayerInComa', sourcePlayerInComa)
   end
 )
+
+AddEventHandler('playerDropped', function()
+  TriggerEvent('es:getPlayerFromId', source,
+    function(user)
+      local executed_query = MySQL:executeQuery("UPDATE users SET enService = 0 WHERE users.identifier = '@identifier'", {['@identifier'] = user.identifier})
+    end
+  )
+end)
 
 function GetJobId(source)
   local jobId = -1
