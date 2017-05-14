@@ -7,6 +7,7 @@ Requirements
 ------------
 
 Essential Mode
+[Skin customization](https://forum.fivem.net/t/release-skin-customization-v1-0/16491)
 
 How to install
 --------------
@@ -18,6 +19,7 @@ How to install
 - Replace the spawnmanager into fivem-server/resources/[system]/ to disable respawn to death
 - Modify the sql file and execute it (here you have to specify your steamid)
 - You can also modifiy the language in the client (just modify the variable into cl_ files)
+- (Don't forget to install Skin customization mod)
 
 Screenshots
 -----------
