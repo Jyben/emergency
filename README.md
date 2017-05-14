@@ -11,12 +11,13 @@ Essential Mode
 How to install
 --------------
 
-- Put the emergency folder into fivem-server/resources/[essential]/es_jobs
-- Put the resource.lua file into fivem-server/resources/[essential]/es_jobs
-- Add - es_jobs into your citmp-server.yml file
+- Download and unzip the [emergency-master.zip](https://github.com/Jyben/emergency/archive/master.zip)
+- Rename the folder in emergency
+- Put the emergency folder into fivem-server/resources/
+- Add - emergency into your citmp-server.yml file
 - Replace the spawnmanager into fivem-server/resources/[system]/ to disable respawn to death
-- Modify the sql file and execute it
-- You can modifiy the language in the client (just modify the variable into cl_ files)
+- Modify the sql file and execute it (here you have to specify your steamid)
+- You can also modifiy the language in the client (just modify the variable into cl_ files)
 
 Screenshots
 -----------
