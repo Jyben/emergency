@@ -16,6 +16,7 @@ How to install
 - Add - es_jobs into your citmp-server.yml file
 - Replace the spawnmanager into fivem-server/resources/[system]/ to disable respawn to death
 - Modify the sql file and execute it
+- You can modifiy the language in the client (just modify the variable into cl_ files)
 
 Screenshots
 -----------
