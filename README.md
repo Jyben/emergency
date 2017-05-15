@@ -16,10 +16,14 @@ How to install
 - Rename the folder in emergency
 - Put the emergency folder into fivem-server/resources/
 - Add - emergency into your citmp-server.yml file
-- Replace the spawnmanager into fivem-server/resources/[system]/ to disable respawn to death
 - Modify the sql file and execute it (here you have to specify your steamid)
 - You can also modifiy the language in the client (just modify the variable into cl_ files)
 - (Don't forget to install Skin customization mod)
+
+Update
+------
+
+- You no longer have to change the spawnmanager, please replace it with the original one
 
 Screenshots
 -----------
