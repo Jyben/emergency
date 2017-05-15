@@ -117,6 +117,10 @@ end)
 ################################
 --]]
 
+AddEventHandler("playerSpawned", function(spawn)
+    exports.spawnmanager:setAutoSpawn(false)
+end)
+
 -- Triggered when player died by environment
 AddEventHandler('baseevents:onPlayerDied',
   function(playerId, reasonID)
@@ -202,7 +206,6 @@ function OnPlayerDied(playerId, reasonID, reason)
 	)
 
 	SendNotification(txt[lang]['respawn'])
-	TriggerEvent('es_em:playerInComa')
 
 	Citizen.CreateThread(
 		function()

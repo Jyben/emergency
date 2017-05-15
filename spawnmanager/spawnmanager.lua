@@ -4,12 +4,6 @@ local spawnPoints = {}
 -- auto-spawn enabled flag
 local autoSpawnEnabled = false
 local autoSpawnCallback
-local playerInComa = false
-
--- From cl_healthplayer
-AddEventHandler('es_em:playerInComa', function()
-  playerInComa = true
-end)
 
 -- support for mapmanager maps
 AddEventHandler('getMapDirectives', function(add)
@@ -312,7 +306,7 @@ Citizen.CreateThread(function()
             -- check if we want to autospawn
             if autoSpawnEnabled then
                 if NetworkIsPlayerActive(PlayerId()) then
-                    if (not playerInComa) and ((diedAt and (GetTimeDifference(GetGameTimer(), diedAt) > 2000)) or respawnForced) then
+                    if (diedAt and (GetTimeDifference(GetGameTimer(), diedAt) > 2000)) or respawnForced then
                         Citizen.Trace("forcin' respawn\n")
 
                         if autoSpawnCallback then
