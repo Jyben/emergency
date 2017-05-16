@@ -147,12 +147,16 @@ AddEventHandler('es_em:cl_sendMessageToPlayerInComa',
 RegisterNetEvent('es_em:cl_resurectPlayer')
 AddEventHandler('es_em:cl_resurectPlayer',
 	function()
-		isRes = true
-		SendNotification(txt[lang]['res'])
 		local playerPed = GetPlayerPed(-1)
-		ResurrectPed(playerPed)
-		SetEntityHealth(playerPed, GetPedMaxHealth(playerPed)/2)
-		ClearPedTasksImmediately(playerPed)
+		isRes = true
+
+		if IsEntityDead(playerPed) then
+			SendNotification(txt[lang]['res'])
+
+			ResurrectPed(playerPed)
+			SetEntityHealth(playerPed, GetPedMaxHealth(playerPed)/2)
+			ClearPedTasksImmediately(playerPed)
+		end
 	end
 )
 
