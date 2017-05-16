@@ -56,6 +56,8 @@ local txt = {
 local isInService = false
 local jobId = -1
 local notificationInProgress = false
+local playerInComaIsADoc = false
+local callAlreadyTaken = false
 
 --[[
 ################################
@@ -128,32 +130,15 @@ end)
 RegisterNetEvent('es_em:sendEmergencyToDocs')
 AddEventHandler('es_em:sendEmergencyToDocs',
 	function(reason, playerIDInComa, x, y, z, sourcePlayerInComa)
-		local callAlreadyTaken = false
+		callAlreadyTaken = false
 		local playerServerId = GetPlayerServerId(PlayerId())
-		local playerInComaIsADoc = false
 
 		if playerIDInComa == playerServerId then playerInComaIsADoc = true else playerInComaIsADoc = false end
-
-		RegisterNetEvent('es_em:callTaken')
-		AddEventHandler('es_em:callTaken',
-			function(playerName, playerID)
-				callAlreadyTaken = true
-
-				if isInService and jobId == 11 and not playerInComaIsADoc then
-					SendNotification(txt[lang]['callTaken'] .. playerName .. '~s~')
-				end
-
-				if playerServerId == playerID then
-					TriggerServerEvent('es_em:sv_sendMessageToPlayerInComa', sourcePlayerInComa)
-					StartEmergency(x, y, z, playerIDInComa, sourcePlayerInComa)
-				end
-		end)
 
 		Citizen.CreateThread(
 			function()
 				if isInService and jobId == 11 and not playerInComaIsADoc then
 					local controlPressed = false
-
 
 					while notificationInProgress do
 						Citizen.Wait(0)
@@ -178,7 +163,7 @@ AddEventHandler('es_em:sendEmergencyToDocs',
 						if IsControlPressed(1, Keys["Y"]) and not callAlreadyTaken then
 							callAlreadyTaken = true
 							controlPressed = true
-							TriggerServerEvent('es_em:getTheCall', GetPlayerName(PlayerId()), playerServerId)
+							TriggerServerEvent('es_em:getTheCall', GetPlayerName(PlayerId()), playerServerId, x, y, z, sourcePlayerInComa)
 						end
 
 						if callAlreadyTaken or controlPressed then
@@ -190,6 +175,22 @@ AddEventHandler('es_em:sendEmergencyToDocs',
 		)
 	end
 )
+
+RegisterNetEvent('es_em:callTaken')
+AddEventHandler('es_em:callTaken',
+	function(playerName, playerID, x, y, z, sourcePlayerInComa)
+		local playerServerId = GetPlayerServerId(PlayerId())
+		callAlreadyTaken = true
+
+		if isInService and jobId == 11 and not playerInComaIsADoc then
+			SendNotification(txt[lang]['callTaken'] .. playerName .. '~s~')
+		end
+
+		if playerServerId == playerID then
+			TriggerServerEvent('es_em:sv_sendMessageToPlayerInComa', sourcePlayerInComa)
+			StartEmergency(x, y, z, sourcePlayerInComa)
+		end
+end)
 
 RegisterNetEvent('es_em:cl_setJobId')
 AddEventHandler('es_em:cl_setJobId',
@@ -228,7 +229,7 @@ function SpawnAmbulance()
 	Citizen.InvokeNative(0xB736A491E64A32CF, Citizen.PointerValueIntInitialized(spawned_car))
 end
 
-function StartEmergency(x, y, z, playerID, sourcePlayerInComa)
+function StartEmergency(x, y, z, sourcePlayerInComa)
 	BLIP_EMERGENCY = AddBlipForCoord(x, y, z)
 
 	SetBlipSprite(BLIP_EMERGENCY, 2)
