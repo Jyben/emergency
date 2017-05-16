@@ -20,10 +20,12 @@ How to install
 - You can also modifiy the language in the client (just modify the variable into cl_ files)
 - (Don't forget to install Skin customization mod)
 
-Update
+Update 16/05/2017
 ------
 
 - You no longer have to change the spawnmanager, please replace it with the original one
+- Fix issue #6
+- Fix issue #7
 
 Screenshots
 -----------
