@@ -19,6 +19,8 @@ How to install
 - Modify the sql file and execute it (here you have to specify your steamid)
 - You can also modifiy the language in the client (just modify the variable into cl_ files)
 - (Don't forget to install Skin customization mod)
+- Before starting your server, please remove the content of the cache folder of your server
+- If you don't receive notifications, please disable lambda menu by updating your citmp-server.yml file : DisableScriptHook: false (thx to @Boubi)
 
 Update 16/05/2017
 ------
@@ -26,6 +28,8 @@ Update 16/05/2017
 - You no longer have to change the spawnmanager, please replace it with the original one
 - Fix issue #6
 - Fix issue #7
+- Fix issue #9
+- Feature issue #8
 
 Screenshots
 -----------
