@@ -20,7 +20,7 @@ How to install
 - You can also modifiy the language in the client (just modify the variable into cl_ files)
 - (Don't forget to install Skin customization mod)
 - Before starting your server, please remove the content of the cache folder of your server
-- If you don't receive notifications, please disable lambda menu by updating your citmp-server.yml file : DisableScriptHook: false (thx to @Boubi)
+- If you don't receive notifications, please disable lambda menu by updating your citmp-server.yml file : DisableScriptHook: true (thx to @Boubi)
 
 Update 16/05/2017
 ------
