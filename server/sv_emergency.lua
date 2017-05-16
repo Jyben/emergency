@@ -24,10 +24,10 @@ AddEventHandler('es_em:sendEmergency',
 
 RegisterServerEvent('es_em:getTheCall')
 AddEventHandler('es_em:getTheCall',
-  function(playerName, playerID)
+  function(playerName, playerID, x, y, z, sourcePlayerInComa)
     TriggerEvent("es:getPlayers", function(players)
       for i,v in pairs(players) do
-        TriggerClientEvent('es_em:callTaken', i, playerName, playerID)
+        TriggerClientEvent('es_em:callTaken', i, playerName, playerID, x, y, z, sourcePlayerInComa)
       end
     end)
   end
