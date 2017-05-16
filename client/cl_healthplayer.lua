@@ -30,7 +30,8 @@ local txt = {
 		['res'] = 'Vous avez été réanimé',
 		['ko'] = 'Vous êtes KO !',
 		['callAmb'] = 'Appuyez sur ~g~E~s~ pour appeler une ambulance',
-		['respawn'] = 'Appuyez sur ~r~X~s~ pour respawn'
+		['respawn'] = 'Appuyez sur ~r~X~s~ pour respawn',
+		['youCallAmb'] = 'Vous avez appelé une ~b~ambulance~s~'
   },
 
 	['en'] = {
@@ -41,7 +42,8 @@ local txt = {
 		['res'] = 'You have been resuscitated',
 		['ko'] = 'You are KO !',
 		['callAmb'] = 'Press ~g~E~s~ to call an ambulance.',
-		['respawn'] = 'Press ~r~X~s~ to respawn'
+		['respawn'] = 'Press ~r~X~s~ to respawn',
+		['youCallAmb'] = 'You called an ~b~ambulance~s~'
 	}
 }
 
@@ -182,6 +184,8 @@ function ResPlayer()
 	isRes = true
 	TriggerServerEvent('es_em:sv_removeMoney')
 	TriggerServerEvent("item:reset")
+	TriggerServerEvent("skin_customization:SpawnPlayer")
+	RemoveAllPedWeapons(GetPlayerPed(-1),true)
 	NetworkResurrectLocalPlayer(357.757, -597.202, 28.6314, true, true, false)
 end
 
@@ -221,6 +225,7 @@ function OnPlayerDied(playerId, reasonID, reason)
 					if not isDocConnected then
 						ResPlayer()
 					else
+						SendNotification(txt[lang]['youCallAmb'])
 						TriggerServerEvent('es_em:sendEmergency', reason, GetPlayerServerId(PlayerId()), pos.x, pos.y, pos.z)
 					end
 
