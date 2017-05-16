@@ -57,7 +57,6 @@ local isInService = false
 local jobId = -1
 local notificationInProgress = false
 local playerInComaIsADoc = false
-local callAlreadyTaken = false
 
 --[[
 ################################
@@ -130,7 +129,6 @@ end)
 RegisterNetEvent('es_em:sendEmergencyToDocs')
 AddEventHandler('es_em:sendEmergencyToDocs',
 	function(reason, playerIDInComa, x, y, z, sourcePlayerInComa)
-		callAlreadyTaken = false
 		local playerServerId = GetPlayerServerId(PlayerId())
 
 		if playerIDInComa == playerServerId then playerInComaIsADoc = true else playerInComaIsADoc = false end
@@ -146,27 +144,25 @@ AddEventHandler('es_em:sendEmergencyToDocs',
 
 					local notifReceivedAt = GetGameTimer()
 
-					if not callAlreadyTaken then
-						SendNotification(txt[lang]['emergency'] .. reason)
-						SendNotification(txt[lang]['takeCall'])
-					end
+					SendNotification(txt[lang]['emergency'] .. reason)
+					SendNotification(txt[lang]['takeCall'])
 
-					while not controlPressed and not callAlreadyTaken do
+					while not controlPressed do
 						Citizen.Wait(0)
 						notificationInProgress = true
 
 						if (GetTimeDifference(GetGameTimer(), notifReceivedAt) > 15000) then
-							callAlreadyTaken = true
+							notificationInProgress = false
+							controlPressed = true
 							SendNotification(txt[lang]['callExpires'])
 						end
 
-						if IsControlPressed(1, Keys["Y"]) and not callAlreadyTaken then
-							callAlreadyTaken = true
+						if IsControlPressed(1, Keys["Y"]) then
 							controlPressed = true
 							TriggerServerEvent('es_em:getTheCall', GetPlayerName(PlayerId()), playerServerId, x, y, z, sourcePlayerInComa)
 						end
 
-						if callAlreadyTaken or controlPressed then
+						if controlPressed then
 							notificationInProgress = false
 						end
 					end
@@ -180,7 +176,6 @@ RegisterNetEvent('es_em:callTaken')
 AddEventHandler('es_em:callTaken',
 	function(playerName, playerID, x, y, z, sourcePlayerInComa)
 		local playerServerId = GetPlayerServerId(PlayerId())
-		callAlreadyTaken = true
 
 		if isInService and jobId == 11 and not playerInComaIsADoc then
 			SendNotification(txt[lang]['callTaken'] .. playerName .. '~s~')
