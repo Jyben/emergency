@@ -88,9 +88,9 @@ AddEventHandler('es_em:sv_removeMoney',
     TriggerEvent("es:getPlayerFromId", source,
       function(user)
         if(user)then
-          user:setMoney(0)
-          -- This part requires the mod vdk_inventory
-          --TriggerServerEvent("item:reset")
+          if user.money > 0 then
+            user:setMoney(0)
+          end
         end
       end
     )
@@ -110,6 +110,10 @@ AddEventHandler('playerDropped', function()
       local executed_query = MySQL:executeQuery("UPDATE users SET enService = 0 WHERE users.identifier = '@identifier'", {['@identifier'] = user.identifier})
     end
   )
+end)
+
+TriggerEvent('es:addCommand', 'respawn', function(source, args, user)
+  TriggerClientEvent('es_em:cl_respawn', source)
 end)
 
 function GetJobId(source)

@@ -164,6 +164,13 @@ AddEventHandler('es_em:cl_resurectPlayer',
 	end
 )
 
+RegisterNetEvent('es_em:cl_respawn')
+AddEventHandler('es_em:cl_respawn',
+	function()
+		ResPlayer()
+	end
+)
+
 --[[
 ################################
         BUSINESS METHODS
